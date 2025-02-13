@@ -18,7 +18,7 @@ class SNSRGANLoss(nn.Module):
     self.bce = nn.BCELoss()
 
   def conditional_adversarial_loss(self, d_fake):
-    return torch.sum(torch.log(d_fake + 1e-8))
+    return torch.mean(torch.log(d_fake + 1e-8))
 
   def pixelwise_mse(self, sr, hr):
     return self.mse(hr, sr)
