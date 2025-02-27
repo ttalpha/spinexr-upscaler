@@ -22,30 +22,22 @@ class Generator(Model):
             nn.Conv2d(3, 64, kernel_size=9, padding=4),
             nn.PReLU()
         )
-        self.block2 = ResidualBlock(64)
-        self.block3 = ResidualBlock(64)
-        self.block4 = ResidualBlock(64)
-        self.block5 = ResidualBlock(64)
-        self.block6 = ResidualBlock(64)
-        self.block7 = nn.Sequential(
+        self.residual_blocks = nn.Sequential(*[ResidualBlock(64) for _ in range(5)])
+        self.conv_block = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
             nn.PReLU()
         )
-        block8 = [UpsampleBLock(64, 2) for _ in range(upsample_block_num)]
-        block8.append(nn.Conv2d(64, 3, kernel_size=9, padding=4))
-        self.block8 = nn.Sequential(*block8)
+        upsampler_blocks = [UpsampleBLock(64, 2) for _ in range(upsample_block_num)]
+        upsampler_blocks.append(nn.Conv2d(64, 3, kernel_size=9, padding=4))
+        self.upsampler = nn.Sequential(*upsampler_blocks)
 
     def forward(self, x):
-      block1 = self.block1(x)
-      block2 = self.block2(block1)
-      block3 = self.block3(block2)
-      block4 = self.block4(block3)
-      block5 = self.block5(block4)
-      block6 = self.block6(block5)
-      block7 = self.block7(block6)
-      block8 = self.block8(block1 + block7)
+      x = self.block1(x)
+      res = self.residual_blocks(x)
+      res = self.conv_block(res)
+      x = self.upsampler(x + res)
 
-      return (torch.tanh(block8) + 1) / 2
+      return (torch.tanh(x) + 1) / 2
 
 class Discriminator(Model):
     def __init__(self):
@@ -66,26 +58,26 @@ class Discriminator(Model):
             nn.SyncBatchNorm(128),
             nn.LeakyReLU(0.2),
 
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.SyncBatchNorm(256),
-            nn.LeakyReLU(0.2),
+            # nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            # nn.SyncBatchNorm(256),
+            # nn.LeakyReLU(0.2),
 
-            nn.Conv2d(256, 256, kernel_size=3, stride=2, padding=1),
-            nn.SyncBatchNorm(256),
-            nn.LeakyReLU(0.2),
+            # nn.Conv2d(256, 256, kernel_size=3, stride=2, padding=1),
+            # nn.SyncBatchNorm(256),
+            # nn.LeakyReLU(0.2),
 
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
-            nn.SyncBatchNorm(512),
-            nn.LeakyReLU(0.2),
+            # nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            # nn.SyncBatchNorm(512),
+            # nn.LeakyReLU(0.2),
 
-            nn.Conv2d(512, 512, kernel_size=3, stride=2, padding=1),
-            nn.SyncBatchNorm(512),
-            nn.LeakyReLU(0.2),
+            # nn.Conv2d(512, 512, kernel_size=3, stride=2, padding=1),
+            # nn.SyncBatchNorm(512),
+            # nn.LeakyReLU(0.2),
 
             nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(512, 1024, kernel_size=1),
+            nn.Conv2d(128, 256, kernel_size=1),
             nn.LeakyReLU(0.2),
-            nn.Conv2d(1024, 1, kernel_size=1)
+            nn.Conv2d(256, 1, kernel_size=1)
         )
 
     def forward(self, x):
