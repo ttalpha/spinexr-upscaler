@@ -1,7 +1,0 @@
-dataset/
-images/
-models/
-__pycache__
-*.dicom
-*.dcm
-samples/
