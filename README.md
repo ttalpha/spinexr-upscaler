@@ -13,30 +13,7 @@ The goal of this project is to develop an AI model that can upscale X-ray images
 ### Installation
 
 #### AI Model
-1. Navigate to the `ai` directory:
-    ```sh
-    cd ai
-    ```
-2. Create a conda environment:
-    ```sh
-    conda create -n ai python=3.12.7
-    ```
-3. Activate the conda environment:
-    ```sh
-    conda activate ai
-    ```
-4. Install the required Python packages:
-    ```sh
-    pip install -r requirements.txt
-    ```
-5. Download the dataset in either JPEG or DICOM format (WARNING: very heavy):
-    - [JPEG (~570GB)](https://physionet.org/content/mimic-cxr-jpg/2.1.0/)
-    - [DICOM (~4.7TB)](https://physionet.org/content/mimic-cxr/2.1.0/)
-6. Flatten the directories and place 99% images in `ai/dataset/train` and 1% in `ai/dataset/test`
-7. Train the model:
-    ```sh
-    python main.py
-    ```
+Follow instructions on [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN)
 
 #### Desktop Application
 1. Navigate to the `desktop/` directory:
