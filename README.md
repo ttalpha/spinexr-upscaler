@@ -1,0 +1,2 @@
+# Spinexr Upscaler API
+
