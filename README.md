@@ -70,14 +70,63 @@ curl -O http://localhost:8080/download/123e4567-e89b-12d3-a456-426614174000
 ```
 File PNG sẽ được tải về.
 
+### Get list of existing UUIDs
+```sh
+curl -X GET "http://localhost:8080/uuid"
+```
+**Phản hồi mẫu:**
+Response:
+```json
+{
+  "uuids": ["uuid1", "uuid2", "uuid3"]
+}
+```
+
 ---
 
 ## 3. Câu trúc API
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/upload` | Upload file DICOM |
-| `POST` | `/process/:uuid` | Xử lý file DICOM |
-| `GET`  | `/download/:uuid` | Tải file PNG đã xử lý |
+| Method | Endpoint               | Description |
+|--------|------------------------|-------------|
+| POST   | `/upload`              | Upload file DICOM |
+| POST   | `/process/:uuid`       | Process file DICOM |
+| GET    | `/download/:uuid`      | Download processed PNG |
+| GET    | `/uuid`                | Get list of existing UUIDs |
+
+---
+
+## 4. Cấu trúc thư mục
+```bash
+┌─[dora@localhost]─[~/su-api]
+└──╼ $tree ./
+./
+├── assets
+│   └── dicom
+│       └── 0a7f1942e568e05704c976da16c9d1a5.dicom
+├── cmd
+│   └── main.go
+├── go.mod
+├── go.sum
+├── internal
+│   ├── handlers
+│   │   ├── download.go
+│   │   ├── process.go
+│   │   ├── upload.go
+│   │   └── uuid.go
+│   ├── services
+│   │   ├── dicom.go
+│   │   ├── exec.go
+│   │   └── process.go
+│   └── utils
+│       └── file.go
+├── LICENSE
+├── main.go -> cmd/main.go
+├── Makefile
+├── README.md
+└── scripts
+    └── process.py
+
+9 directories, 17 files
+```
 
 ---
 

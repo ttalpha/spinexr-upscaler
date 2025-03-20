@@ -16,6 +16,7 @@ func realMain() int {
 	r.POST("/upload", handlers.UploadHandler)
 	r.POST("/process/:uuid", handlers.ProcessHandler)
 	r.GET("/download/:uuid", handlers.DownloadHandler)
+	r.GET("/uuid", handlers.ListUUIDHandler)
 
 	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
 		log.Fatal(err)
