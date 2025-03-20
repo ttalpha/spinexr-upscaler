@@ -10,7 +10,7 @@ import (
 
 const dataDir = "data"
 
-func main() {
+func realMain() int {
 	r := gin.Default()
 
 	r.POST("/upload", handlers.UploadHandler)
@@ -22,4 +22,10 @@ func main() {
 	}
 
 	r.Run(":8080")
+
+	return 0
+}
+
+func main() {
+	os.Exit(realMain())
 }
