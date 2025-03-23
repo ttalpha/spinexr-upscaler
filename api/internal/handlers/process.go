@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const outputSuffix = "_processed.png"
+const outputSuffix = "_processed"
 
 func ProcessHandler(c *gin.Context) {
 	uuids := strings.Split(c.Param("uuid"), ",") // Hỗ trợ nhiều UUID
@@ -17,8 +17,8 @@ func ProcessHandler(c *gin.Context) {
 	bit := c.Query("bit")
 
 	// Kiểm tra giá trị upscale hợp lệ
-	if upscale != "x2" && upscale != "x4" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Upscale must be 'x2' or 'x4'"})
+	if upscale != "2" && upscale != "4" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Upscale must be '2' or '4'"})
 		return
 	}
 
@@ -32,17 +32,29 @@ func ProcessHandler(c *gin.Context) {
 
 	for _, fileUUID := range uuids {
 		dicomPath := filepath.Join(dataDir, fileUUID+".dcm")
-		outputPath := filepath.Join(dataDir, fileUUID+outputSuffix)
+		metaPath := filepath.Join(dataDir, fileUUID+".json")
+		outpngPath := filepath.Join(dataDir, fileUUID+outputSuffix+".png")
+		outdicomPath := filepath.Join(dataDir, fileUUID+outputSuffix+".dcm")
 
-		// Chạy script xử lý với upscale và bit
-		cmd := exec.Command("python3", "scripts/process.py", dicomPath, outputPath, upscale, bit)
+		// Dicom to PNG
+		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outputPath, "-m", metaPath)
 		if err := cmd.Run(); err != nil {
-			continue // Bỏ qua file nếu xử lý lỗi
+			continue
 		}
+
+		cmd = exec.Command("python3", "models")
+                if err = cmd.Run(); err != nil {
+                        continue
+                }
+
+		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outputPath, "-o", outdicomPath, "-m", metaPath)
+                if err = cmd.Run(); err != nil {
+                        continue
+                }
 
 		processedFiles = append(processedFiles, gin.H{
 			"uuid":    fileUUID,
-			"output":  outputPath,
+			"output":  outpngPath,
 			"upscale": upscale,
 			"bit":     bit,
 		})
