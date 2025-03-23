@@ -1,0 +1,12 @@
+Results for base:
+  Average SSIM: 0.8072
+  Average PSNR: 32.0654
+
+Results for ftx4:
+  Average SSIM: 0.8674
+  Average PSNR: 34.8075
+
+Results for ftx2:
+  Average SSIM: 0.8954
+  Average PSNR: 37.2730
+
