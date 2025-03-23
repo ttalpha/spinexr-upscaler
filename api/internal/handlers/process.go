@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	_ "strconv"
 )
 
 const outputSuffix = "_processed"
@@ -34,6 +35,7 @@ func ProcessHandler(c *gin.Context) {
 		dicomPath := filepath.Join(dataDir, fileUUID+".dcm")
 		metaPath := filepath.Join(dataDir, fileUUID+".json")
 		outpngPath := filepath.Join(dataDir, fileUUID+outputSuffix+".png")
+                outpngUpPath := filepath.Join(dataDir, fileUUID+outputSuffix+"-complete.png")
 		outdicomPath := filepath.Join(dataDir, fileUUID+outputSuffix+".dcm")
 
 		// Dicom to PNG
@@ -42,12 +44,12 @@ func ProcessHandler(c *gin.Context) {
 			continue
 		}
 
-		cmd = exec.Command("python3", "models")
+		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-mp", "models/data/x"+upscale+"/net_g_latest.pth")
                 if err := cmd.Run(); err != nil {
                         continue
                 }
 
-		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngPath, "-o", outdicomPath, "-m", metaPath)
+		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", outdicomPath, "-m", metaPath)
                 if err := cmd.Run(); err != nil {
                         continue
                 }
