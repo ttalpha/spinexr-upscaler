@@ -76,7 +76,7 @@ def degrade_image(filename):
         output_path = os.path.join(output_dir, filename)
         cv2.imwrite(output_path, img_resized, [cv2.IMWRITE_JPEG_QUALITY, random.randint(80, 95)])
 
-input_files = os.listdir(input_dir)[:1]
+input_files = os.listdir(input_dir)
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
     executor.map(degrade_image, input_files)
