@@ -49,13 +49,13 @@ def process_directory_parallel(input_dir, output_dir, num_workers=8):
         executor.map(lambda args: dicom_to_jpeg(*args), dicom_files)
 
 # Directories
-train_dicom_dir = "dataset/train_images"
-# test_dicom_dir = "dataset/test_images"
-train_jpeg_dir = "dataset/train_jpeg"
-# test_jpeg_dir = "dataset/test_jpeg"
+# train_dicom_dir = "dataset/train_images"
+test_dicom_dir = "datasets/test_images"
+# train_jpeg_dir = "dataset/train_jpeg"
+test_jpeg_dir = "datasets/test_jpeg"
 
 # Process train and test directories in parallel
-process_directory_parallel(train_dicom_dir, train_jpeg_dir, num_workers=4)
-# process_directory_parallel(test_dicom_dir, test_jpeg_dir, num_workers=4)
+# process_directory_parallel(train_dicom_dir, train_jpeg_dir, num_workers=4)
+process_directory_parallel(test_dicom_dir, test_jpeg_dir, num_workers=4)
 
 print("Parallel conversion complete!")
