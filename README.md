@@ -1,6 +1,6 @@
 # Spinexr Upscaler API
 
-Spinexr Upscaler API là một dịch vụ RESTful API giúp upload, xử lý và tải xuống các file DICOM. API hỗ trợ upscale ảnh (x2, x4) và bit depth (8, 16) thông qua script xử lý bằng Python.
+Spinexr Upscaler API là một dịch vụ RESTful API giúp upload, xử lý và tải xuống các file DICOM. API hỗ trợ upscale ảnh (2, 4) và bit depth (8, 16) thông qua script xử lý bằng Python.
 
 ## 1. Cài đặt và Chạy API
 
@@ -30,7 +30,7 @@ go build -o su-api
 ## 2. Sử dụng API với `curl`
 
 ### Upload file DICOM
-Gửi file DICOM với thông số **upscale** (chỉ nhận `x2` hoặc `x4`) và **bit** (chỉ nhận `8` hoặc `16`).
+Gửi file DICOM với thông số **upscale** (chỉ nhận `2` hoặc `4`) và **bit** (chỉ nhận `8` hoặc `16`).
 
 ```sh
 curl -X POST http://localhost:8080/upload \
@@ -52,14 +52,14 @@ curl -X POST http://localhost:8080/upload \
 ### Xử lý file DICOM
 Sử dụng UUID nhận được khi upload để xử lý file.
 ```sh
-curl -X POST "http://localhost:8080/process/123e4567-e89b-12d3-a456-426614174000?upscale=x4&bit=16"
+curl -X POST "http://localhost:8080/process/123e4567-e89b-12d3-a456-426614174000?upscale=4&bit=16"
 ```
 **Phản hồi mẫu:**
 ```json
 {
   "message": "Processing completed",
   "files": [
-    { "uuid": "123e4567-e89b-12d3-a456-426614174000", "output": "data/123e4567-e89b-12d3-a456-426614174000_processed.png", "upscale": "x4", "bit": "16" }
+    { "uuid": "123e4567-e89b-12d3-a456-426614174000", "output": "data/123e4567-e89b-12d3-a456-426614174000_processed.png", "upscale": "4", "bit": "16" }
   ]
 }
 ```
