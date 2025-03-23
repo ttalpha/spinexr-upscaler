@@ -44,7 +44,7 @@ func ProcessHandler(c *gin.Context) {
 			continue
 		}
 
-		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-mp", "models/data/x"+upscale+"/net_g_latest.pth")
+		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-mp", "models/weights/g_x"+upscale+".pth")
                 if err := cmd.Run(); err != nil {
                         continue
                 }
