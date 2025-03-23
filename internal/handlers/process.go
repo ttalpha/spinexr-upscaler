@@ -37,24 +37,24 @@ func ProcessHandler(c *gin.Context) {
 		outdicomPath := filepath.Join(dataDir, fileUUID+outputSuffix+".dcm")
 
 		// Dicom to PNG
-		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outputPath, "-m", metaPath)
+		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath, "-m", metaPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
 
 		cmd = exec.Command("python3", "models")
-                if err = cmd.Run(); err != nil {
+                if err := cmd.Run(); err != nil {
                         continue
                 }
 
-		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outputPath, "-o", outdicomPath, "-m", metaPath)
-                if err = cmd.Run(); err != nil {
+		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngPath, "-o", outdicomPath, "-m", metaPath)
+                if err := cmd.Run(); err != nil {
                         continue
                 }
 
 		processedFiles = append(processedFiles, gin.H{
 			"uuid":    fileUUID,
-			"output":  outpngPath,
+			"output":  outdicomPath,
 			"upscale": upscale,
 			"bit":     bit,
 		})
