@@ -22,7 +22,12 @@
         <div class="icon">
           <img src="xray-upload.svg" class="upload-icon" alt="Upload Icon" />
         </div>
-        <div class="upload-text">Drag and drop picture files to upload</div>
+        <div class="upload-text">
+          <div>
+            <u style="font-weight: bold">Click to upload</u> or drag and drop
+          </div>
+          Accepted DICOM file only
+        </div>
       </div>
       <div class="setting-options">
         <div id="option">
@@ -40,7 +45,6 @@
             <option value="16">16-bit</option>
           </select>
         </div>
-        <div id="output" class="output"></div>
       </div>
       <div id="file-list"></div>
       <div class="action-buttons">
@@ -49,12 +53,13 @@
       </div>
     </div>
     <div id="progress-container">
-      <h1 id="wait">Chill guy time</h1>
-      <div class="sub-tittle">
-        Why are you waitin'? I will give you to
-        <a href="https://cdn.mtdv.me/video/rick.mp4">pornhub.com</a>
-      </div>
+      <h1 id="wait">Waiting ...</h1>
     </div>
+    <div id="results-container">
+      <h1 id="title">Completed List</h1>
+      <label id="sub-title">You can download file now</label>
+    </div>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="upload.js"></script>
   </body>
 </html>

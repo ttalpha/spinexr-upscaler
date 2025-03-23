@@ -10,6 +10,10 @@ const uploadBox = document.getElementById("upload-box");
 const option = document.getElementById("option");
 const progressContainer = document.getElementById("progress-container");
 const wait = document.getElementById("wait");
+const resultsContainer = document.getElementById("results-container");
+const title = document.getElementById("title");
+const subTitle = document.getElementById("sub-title");
+
 // Prevent default drag behaviors
 ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
   dropZone.addEventListener(eventName, preventDefaults, false);
@@ -45,15 +49,6 @@ function unhighlight(e) {
   dropZone.classList.remove("dragover");
 }
 
-document.querySelectorAll(".btn").forEach((button) => {
-  button.addEventListener("click", () => {
-    document
-      .querySelectorAll(".btn")
-      .forEach((btn) => btn.classList.remove("active"));
-    button.classList.add("active");
-  });
-});
-
 function handleDrop(e) {
   const dt = e.dataTransfer;
   const files = dt?.files || e.target?.files;
@@ -82,16 +77,19 @@ function handleDrop(e) {
 function handleFiles(files) {
   fileList.innerHTML = ""; // Clear existing list
   let hasValidFiles = false;
+  let validFileCount = 0; // Counter for valid files
 
   for (const file of files) {
     if (file) {
       // Check if there is a file
       if (
-        file.type === "application/dicom" ||
-        file.name.toLowerCase().endsWith(".dicom") ||
-        file.name.toLowerCase().endsWith(".dcm")
+        validFileCount < 3 && // Limit to a maximum of 3 files
+        (file.type === "application/dicom" ||
+          file.name.toLowerCase().endsWith(".dicom") ||
+          file.name.toLowerCase().endsWith(".dcm"))
       ) {
         hasValidFiles = true;
+        validFileCount++; // Increment valid file count
 
         // Create preview container
         const previewArea = document.createElement("div");
@@ -105,20 +103,23 @@ function handleFiles(files) {
         div.className = "file-item";
         div.innerHTML = `
             <span>${file.name}</span>
-            <svg class="remove-file-btn" data-filename="${file.name}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 6 6 18"/>
-              <path d="m6 6 12 12"/>
-            </svg>`;
+            <img src="trash-icon.svg" class="remove-file-btn" data-filename="${file.name}"/>
+            `;
 
         // Append file item to fileList
         fileList.appendChild(div);
 
-        // Read and render DICOM file
+        // Read file as ArrayBuffer (needed for DICOM processing)
         const fileReader = new FileReader();
         fileReader.onload = function () {};
-
-        // Read file as ArrayBuffer (needed for DICOM processing)
         fileReader.readAsArrayBuffer(file);
+      } else if (validFileCount >= 3) {
+        // Show message if more than 3 files are attempted to be uploaded
+        wrongFile.style.display = "block"; // Show wrong file message
+        wrongFile.textContent = "You can only upload a maximum of 3 files.";
+        setTimeout(() => {
+          wrongFile.style.display = "none";
+        }, 5000);
       } else {
         wrongFile.style.display = "block"; // Show wrong file message
         setTimeout(() => {
@@ -165,7 +166,6 @@ function handleReset() {
 
 let selectedScale = 2;
 let selectedBitDepth = 8;
-let uploadData = [];
 
 // Handle scale button clicks
 document.querySelectorAll(".scale-btn").forEach((button) => {
@@ -183,6 +183,8 @@ const bitSelect = document.getElementById("bit-select");
 bitSelect.addEventListener("change", function () {
   selectedBitDepth = +this.value; // Get selected value
 });
+
+let listFiles = [];
 
 // Update handlesubmit function to show full image
 async function handleSubmit() {
@@ -210,6 +212,8 @@ async function handleSubmit() {
 
   files.forEach((file) => {
     if (file) {
+      const fileName = file.querySelector("span").textContent;
+      listFiles.push(fileName);
       formData.append("files", file); // Append file to FormData
     }
   });
@@ -230,14 +234,14 @@ async function handleSubmit() {
     }, 5000);
     console.log("success");
 
-    processBar();
-
     wait.style.display = "block";
+    processBar();
   } catch (error) {
     console.error("Error:", error);
     errorMessage.textContent = "Error submitting files. Please try again.";
     errorMessage.style.display = "block";
   }
+
   // Hide buttons after submitting
   resetBtn.style.display = "none";
   submitBtn.style.display = "none";
@@ -260,8 +264,73 @@ function processBar() {
     if (progressWidth >= 100) {
       clearInterval(interval);
       progressBar.remove(); // Remove loading bar when complete
+      wait.style.display = "none";
+      results();
     }
-  }, 1000);
+  }, 500);
+}
+
+function results() {
+  progressContainer.style.display = "none";
+  resultsContainer.style.display = "flex";
+  title.style.display = "block";
+  // Create a container for the results
+  fileList.innerHTML = "";
+  const resultsPreviewArea = document.createElement("div");
+  resultsPreviewArea.className = "preview-area"; // Add a class for styling
+
+  // Display each uploaded file in the results
+  fileList.appendChild(resultsPreviewArea);
+  while (listFiles.length > 0) {
+    const fileName = listFiles.pop(); // Pop the last file name from the array
+
+    // Create a div for each file preview
+    const div = document.createElement("div");
+    div.className = "file-item";
+
+    div.innerHTML = `
+    <div class="near-by">   
+    <img src="file-icon.svg"/>
+            <span>${fileName}</span>
+            </div>
+            <div class="near-by">
+            <img src="download-icon.svg" class="download-file-btn" data-filename="${fileName}"/>
+            <img src="trash-icon.svg" class="remove-file-btn" data-filename="${fileName}"/>
+</div>
+    `;
+    // Append the file preview to the results preview area
+    resultsPreviewArea.appendChild(div);
+    const downloadBtn = div.querySelector(".download-file-btn");
+    downloadBtn.addEventListener("click", function () {
+      downloadFile(fileName); // Call the download function
+    });
+
+    // Add event listener for the remove button
+    const removeBtn = div.querySelector(".remove-file-btn");
+    removeBtn.addEventListener("click", function () {
+      div.remove(); // Remove the file item from the results
+    });
+  }
+
+  // Append the results preview area to the results container
+  resultsContainer.appendChild(resultsPreviewArea);
+  subTitle.style.display = "block";
+}
+function downloadFile(fileName) {
+  // Assuming you have the file data available, you can create a Blob
+  // For demonstration, let's create a dummy Blob. Replace this with actual file data.
+  const fileData = new Blob(["Dummy content for " + fileName], {
+    type: "application/octet-stream",
+  });
+  const url = URL.createObjectURL(fileData);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName; // Set the file name for download
+  document.body.appendChild(a);
+  a.click(); // Trigger the download
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url); // Clean up the URL object
 }
 
 document.querySelector(".submit-btn").addEventListener("click", handleSubmit);
