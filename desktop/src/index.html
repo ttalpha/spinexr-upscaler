@@ -1,19 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="script-src 'self' 'unsafe-inline';"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>X-ray Upscaler</title>
+    <link rel="stylesheet" href="upload.css" />
   </head>
-  <body>
-    <h1>Hello World!</h1>
-    <p>
-      We are using Node.js <span id="node-version"></span>, Chromium
-      <span id="chrome-version"></span>, and Electron
-      <span id="electron-version"></span>.
-    </p>
+  <body bgcolor="white">
+    <div id="success-upload" class="success">
+      Upload to server successfully. Upscaling...
+    </div>
+    <div class="upload-box" id="upload-box">
+      <div id="error-message" class="error">
+        Please upload a file before submitting.
+      </div>
+      <div id="wrong-file" class="error">
+        Please upload only dcm or dicom file.
+      </div>
+      <div class="drag-area" id="drop-zone">
+        <input type="file" multiple id="drop-input" />
+        <div class="icon">
+          <img src="xray-upload.svg" class="upload-icon" alt="Upload Icon" />
+        </div>
+        <div class="upload-text">Drag and drop picture files to upload</div>
+      </div>
+      <div class="setting-options">
+        <div id="option">
+          <label for="scale-factor" class="scale-factor">Scale Factor</label>
+          <div class="scale-options" style="margin-bottom: 16px">
+            <button data-value="2" class="scale-btn active">x2</button>
+            <button data-value="4" class="scale-btn">x4</button>
+          </div>
+        </div>
+
+        <div>
+          <label for="bit-depth" class="bit-depth">Bit Depth</label>
+          <select id="bit-select">
+            <option value="8">8-bit</option>
+            <option value="16">16-bit</option>
+          </select>
+        </div>
+        <div id="output" class="output"></div>
+      </div>
+      <div id="file-list"></div>
+      <div class="action-buttons">
+        <button class="submit-btn">Submit</button>
+        <button class="reset-btn">Reset</button>
+      </div>
+    </div>
+    <div id="progress-container">
+      <h1 id="wait">Chill guy time</h1>
+      <div class="sub-tittle">
+        Why are you waitin'? I will give you to
+        <a href="https://cdn.mtdv.me/video/rick.mp4">pornhub.com</a>
+      </div>
+    </div>
+    <script src="upload.js"></script>
   </body>
 </html>
