@@ -8,6 +8,22 @@ PWD=$(shell pwd)
 
 all: clean linux windows
 
+all-lite: clean linux-lite windows-lite
+
+linux-lite:
+        @echo "Building for Linux AMD64..."
+        @cd api && GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/linux/$(APP_NAME)
+        @mkdir -p $(BUILD_DIR)/linux/{scripts,models,web,desktop}
+        @cp -r $(PWD)/api/scripts $(BUILD_DIR)/linux/
+        @cd $(BUILD_DIR)/linux && zip -r $(BUILD_DIR)/$(FULL_NAME)-linux.zip .
+
+windows-lite:
+        @echo "Building for Windows AMD64..."
+        @cd api && GOOS=windows GOARCH=amd64 go build -o $(BUILD_DIR)/windows/$(APP_NAME).exe
+        @mkdir -p $(BUILD_DIR)/windows/{scripts,models,web,desktop}
+        @cp -r $(PWD)/api/scripts $(BUILD_DIR)/windows/
+        @cd $(BUILD_DIR)/windows && zip -r $(BUILD_DIR)/$(FULL_NAME)-windows.zip .
+
 linux:
 	@echo "Building for Linux AMD64..."
 	@cd api && GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/linux/$(APP_NAME)
