@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -12,6 +13,29 @@ import (
 )
 
 const dataDir = "data"
+const timeClr = 6
+const autoClr = false
+
+func cleanDataFolder() {
+	for {
+		time.Sleep(timeClr * time.Hour)
+
+		files, err := filepath.Glob(filepath.Join(dataDir, "*"))
+		if err != nil {
+			log.Println("Lỗi khi lấy danh sách file:", err)
+			continue
+		}
+
+		for _, file := range files {
+			err := os.Remove(file)
+			if err != nil {
+				log.Println("Lỗi khi xóa file:", file, err)
+			} else {
+				log.Println("Đã xóa file:", file)
+			}
+		}
+	}
+}
 
 func realMain() int {
 	if err := godotenv.Load(); err != nil {
@@ -41,6 +65,10 @@ func realMain() int {
 
 	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
 		log.Fatal(err)
+	}
+
+	if autoClr {
+		go cleanDataFolder()
 	}
 
 	port := os.Getenv("PORT")
