@@ -18,4 +18,4 @@ def extract_dicom_metadata(dicom_path, json_path):
 
 
 # Example usage
-extract_dicom_metadata("datasets/test_images/0a02fcb99f78a525dd29f446af7d179d.dicom", "output.json")
+extract_dicom_metadata("datasets/output_dicom/3cc0a50c9c6f8d47a27ecbcc522c431d.dicom", "output.json")

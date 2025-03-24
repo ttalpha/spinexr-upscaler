@@ -7,12 +7,9 @@ const dropInput = document.getElementById("drop-input");
 const resetBtn = document.querySelector(".reset-btn");
 const submitBtn = document.querySelector(".submit-btn");
 const uploadBox = document.getElementById("upload-box");
-const option = document.getElementById("option");
 const progressContainer = document.getElementById("progress-container");
-const wait = document.getElementById("wait");
 const resultsContainer = document.getElementById("results-container");
-const title = document.getElementById("title");
-const subTitle = document.getElementById("sub-title");
+const submitFiles = [];
 
 // Prevent default drag behaviors
 ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
@@ -89,16 +86,8 @@ function handleFiles(files) {
           file.name.toLowerCase().endsWith(".dcm"))
       ) {
         hasValidFiles = true;
-        validFileCount++; // Increment valid file count
+        validFileCount++;
 
-        // Create preview container
-        const previewArea = document.createElement("div");
-        previewArea.className = "preview-area";
-
-        // Append DICOM preview area to preview container
-        fileList.appendChild(previewArea);
-
-        // Create a div for file name and remove button
         const div = document.createElement("div");
         div.className = "file-item";
         div.innerHTML = `
@@ -108,11 +97,7 @@ function handleFiles(files) {
 
         // Append file item to fileList
         fileList.appendChild(div);
-
-        // Read file as ArrayBuffer (needed for DICOM processing)
-        const fileReader = new FileReader();
-        fileReader.onload = function () {};
-        fileReader.readAsArrayBuffer(file);
+        submitFiles.push(file);
       } else if (validFileCount >= 3) {
         // Show message if more than 3 files are attempted to be uploaded
         wrongFile.style.display = "block"; // Show wrong file message
@@ -133,14 +118,11 @@ function handleFiles(files) {
   document.querySelectorAll(".remove-file-btn").forEach((btn) => {
     btn.addEventListener("click", function () {
       const fileName = this.getAttribute("data-filename");
+      const index = submitFiles.findIndex((file) => file.name === fileName);
 
       // Find and remove the corresponding file item
       const fileItem = this.closest(".file-item");
       if (fileItem) fileItem.remove();
-
-      // Find and remove the corresponding DICOM preview
-      const preview = fileList.querySelector(".preview-area");
-      if (preview) preview.remove();
 
       // Hide buttons if no valid files remain
       if (!fileList.querySelector(".file-item")) {
@@ -164,59 +146,22 @@ function handleReset() {
   errorMessage.classList.add("hidden");
 }
 
-let selectedScale = 2;
-let selectedBitDepth = 8;
-
-// Handle scale button clicks
-document.querySelectorAll(".scale-btn").forEach((button) => {
-  button.addEventListener("click", function () {
-    document
-      .querySelectorAll(".scale-btn")
-      .forEach((btn) => btn.classList.remove("active"));
-    this.classList.add("active");
-    selectedScale = +this.getAttribute("data-value");
-  });
-});
-
-// Handle bit depth selection
-const bitSelect = document.getElementById("bit-select");
-bitSelect.addEventListener("change", function () {
-  selectedBitDepth = +this.value; // Get selected value
-});
-
-let listFiles = [];
-
 // Update handlesubmit function to show full image
 async function handleSubmit() {
   // Clear everything except the last preview
-  const previews = document.querySelectorAll(".preview-area");
-  const lastPreview = previews[previews.length - 1];
   errorMessage.classList.add("hidden");
   errorMessage.style.display = "none";
 
   if (!fileList.querySelector(".file-item")) {
-    // Show error message after 7 seconds
+    // Show error message after 5 seconds
     errorMessage.style.display = "block"; // Show error message
     setTimeout(() => {
-      errorMessage.style.display = "none"; // Hide error message after 7 seconds
+      errorMessage.style.display = "none"; // Hide error message after 5 seconds
     }, 5000);
     return; // Exit if no files are present
   }
   const formData = new FormData();
-
-  formData.append("scale", selectedScale);
-  formData.append("bitDepth", selectedBitDepth);
-
-  // Append each file to the FormData object and push to uploadData array
-  const files = Array.from(fileList.querySelectorAll(".file-item"));
-
-  files.forEach((file) => {
-    if (file) {
-      const fileName = file.querySelector("span").textContent;
-      listFiles.push(fileName);
-      formData.append("files", file); // Append file to FormData
-    }
-  });
+  formData.append("files", submitFiles);
 
   // Send the files to the server
   try {
@@ -226,15 +171,12 @@ async function handleSubmit() {
     // });
 
     uploadBox.style.display = "none";
-    option.style.display = "none";
 
     successUpload.style.display = "block";
     setTimeout(() => {
       successUpload.style.display = "none";
     }, 5000);
-    console.log("success");
 
-    wait.style.display = "block";
     processBar();
   } catch (error) {
     console.error("Error:", error);
@@ -264,7 +206,6 @@ function processBar() {
     if (progressWidth >= 100) {
       clearInterval(interval);
       progressBar.remove(); // Remove loading bar when complete
-      wait.style.display = "none";
       results();
     }
   }, 500);
@@ -273,52 +214,31 @@ function processBar() {
 function results() {
   progressContainer.style.display = "none";
   resultsContainer.style.display = "flex";
-  title.style.display = "block";
   // Create a container for the results
   fileList.innerHTML = "";
-  const resultsPreviewArea = document.createElement("div");
-  resultsPreviewArea.className = "preview-area"; // Add a class for styling
 
-  // Display each uploaded file in the results
-  fileList.appendChild(resultsPreviewArea);
-  while (listFiles.length > 0) {
-    const fileName = listFiles.pop(); // Pop the last file name from the array
+  for (const file of submitFiles) {
+    const fileItem = document.createElement("div");
+    fileItem.className = "file-item";
 
-    // Create a div for each file preview
-    const div = document.createElement("div");
-    div.className = "file-item";
-
-    div.innerHTML = `
-    <div class="near-by">   
-    <img src="file-icon.svg"/>
-            <span>${fileName}</span>
-            </div>
-            <div class="near-by">
-            <img src="download-icon.svg" class="download-file-btn" data-filename="${fileName}"/>
-            <img src="trash-icon.svg" class="remove-file-btn" data-filename="${fileName}"/>
-</div>
+    fileItem.innerHTML = `
+    <div class="near-by">
+      <img src="file-icon.svg"/>
+      <span>${file.name}</span>
+    </div>
+    <div class="near-by">
+      <img src="download-icon.svg" class="download-file-btn" data-filename="${file.name}"/>
+    </div>
     `;
-    // Append the file preview to the results preview area
-    resultsPreviewArea.appendChild(div);
-    const downloadBtn = div.querySelector(".download-file-btn");
+    const downloadBtn = fileItem.querySelector(".download-file-btn");
     downloadBtn.addEventListener("click", function () {
-      downloadFile(fileName); // Call the download function
+      downloadFile(file.name); // Call the download function
     });
-
-    // Add event listener for the remove button
-    const removeBtn = div.querySelector(".remove-file-btn");
-    removeBtn.addEventListener("click", function () {
-      div.remove(); // Remove the file item from the results
-    });
+    resultsContainer.appendChild(fileItem);
   }
-
-  // Append the results preview area to the results container
-  resultsContainer.appendChild(resultsPreviewArea);
-  subTitle.style.display = "block";
 }
+
 function downloadFile(fileName) {
-  // Assuming you have the file data available, you can create a Blob
-  // For demonstration, let's create a dummy Blob. Replace this with actual file data.
   const fileData = new Blob(["Dummy content for " + fileName], {
     type: "application/octet-stream",
   });

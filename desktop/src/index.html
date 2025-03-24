@@ -22,28 +22,11 @@
         <div class="icon">
           <img src="xray-upload.svg" class="upload-icon" alt="Upload Icon" />
         </div>
-        <div class="upload-text">
-          <div>
+        <div>
+          <div class="upload-title">
             <u style="font-weight: bold">Click to upload</u> or drag and drop
           </div>
-          Accepted DICOM file only
-        </div>
-      </div>
-      <div class="setting-options">
-        <div id="option">
-          <label for="scale-factor" class="scale-factor">Scale Factor</label>
-          <div class="scale-options" style="margin-bottom: 16px">
-            <button data-value="2" class="scale-btn active">x2</button>
-            <button data-value="4" class="scale-btn">x4</button>
-          </div>
-        </div>
-
-        <div>
-          <label for="bit-depth" class="bit-depth">Bit Depth</label>
-          <select id="bit-select">
-            <option value="8">8-bit</option>
-            <option value="16">16-bit</option>
-          </select>
+          <div class="upload-subtitle">Accepted max 3 DICOM files only</div>
         </div>
       </div>
       <div id="file-list"></div>
@@ -53,13 +36,19 @@
       </div>
     </div>
     <div id="progress-container">
-      <h1 id="wait">Waiting ...</h1>
+      <h2 class="title">Upscaling images...</h2>
+      <label class="subtitle"
+        >We are upscaling your images. This process may take a few
+        minutes</label
+      >
     </div>
     <div id="results-container">
-      <h1 id="title">Completed List</h1>
-      <label id="sub-title">You can download file now</label>
+      <h2 class="title">Images upscaled successfully</h2>
+      <label class="subtitle"
+        >We may keep your images up to 24 hours. After which, they will be
+        permanently deleted</label
+      >
     </div>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="upload.js"></script>
   </body>
 </html>
