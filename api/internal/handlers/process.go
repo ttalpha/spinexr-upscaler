@@ -32,29 +32,26 @@ func ProcessHandler(c *gin.Context) {
 	processedFiles := []gin.H{}
 
 	for _, fileUUID := range uuids {
-		dicomPath := filepath.Join(dataDir, fileUUID+".dcm")
+		dicomPath := filepath.Join(dataDir, fileUUID+".dicom")
 		metaPath := filepath.Join(dataDir, fileUUID+".json")
 		outpngPath := filepath.Join(dataDir, fileUUID+outputSuffix+".png")
 		outpngUpPath := filepath.Join(dataDir, "output")
-		outdicomPath := filepath.Join(dataDir, fileUUID+outputSuffix+".dcm")
+		outdicomPath := filepath.Join(dataDir, fileUUID+outputSuffix+".dicom")
 
-		// Dicom to PNG
 		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath, "-m", metaPath)
 		if err := cmd.Run(); err != nil {
-
-			// continue
+			continue
 		}
 
-		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-mp", "models/weights/g_x"+upscale+".pth")
-                if err := cmd.Run(); err != nil {
-                        continue
-                }
+		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-t", "512", "-mp", "models/weights/g_x"+upscale+".pth")
+		if err := cmd.Run(); err != nil {
+			continue
+		}
 
-		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", outdicomPath, "-m", metaPath)
-                if err := cmd.Run(); err != nil {
-                        // continue
-			c.JSON(http.StatusOK, gin.H{"error": err})
-                }
+		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath+"/"+fileUUID+outputSuffix+"_out.png", "-o", outdicomPath, "-m", metaPath)
+		if err := cmd.Run(); err != nil {
+			c.JSON(http.StatusOK, gin.H{"path": outpngUpPath+"/"+fileUUID+outputSuffix+".png"})
+		}
 
 		processedFiles = append(processedFiles, gin.H{
 			"uuid":    fileUUID,

@@ -30,11 +30,6 @@ def process_dicom_with_png(test_png_folder, test_dicom_folder, output_folder):
         png_image = (png_image / 255.0) * 65535
         png_image = png_image.astype(np.uint16)
 
-        # Resize PNG if dimensions don't match the original DICOM
-        if png_image.shape != (ds.Rows, ds.Columns):
-            png_image = cv2.resize(png_image, (ds.Columns, ds.Rows), interpolation=cv2.INTER_CUBIC)
-
-        # Ensure encapsulated/compressed pixel data is removed
         if 'PixelData' in ds and hasattr(ds, "NumberOfFrames") and ds.NumberOfFrames > 1:
             del ds.PixelData  # Remove any old compressed pixel data
 

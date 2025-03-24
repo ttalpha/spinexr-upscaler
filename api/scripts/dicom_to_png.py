@@ -7,7 +7,6 @@ import os
 
 def read_xray(path, voi_lut=True, fix_monochrome=True):
     dicom = pydicom.dcmread(path)
-    dicom.decompress()
 
     if voi_lut:
         from pydicom.pixel_data_handlers.util import apply_voi_lut
