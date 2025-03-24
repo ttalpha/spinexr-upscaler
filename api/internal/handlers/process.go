@@ -35,13 +35,14 @@ func ProcessHandler(c *gin.Context) {
 		dicomPath := filepath.Join(dataDir, fileUUID+".dcm")
 		metaPath := filepath.Join(dataDir, fileUUID+".json")
 		outpngPath := filepath.Join(dataDir, fileUUID+outputSuffix+".png")
-                outpngUpPath := filepath.Join(dataDir, fileUUID+outputSuffix+"-complete.png")
+		outpngUpPath := filepath.Join(dataDir, "output")
 		outdicomPath := filepath.Join(dataDir, fileUUID+outputSuffix+".dcm")
 
 		// Dicom to PNG
 		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath, "-m", metaPath)
 		if err := cmd.Run(); err != nil {
-			continue
+
+			// continue
 		}
 
 		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-mp", "models/weights/g_x"+upscale+".pth")
@@ -51,7 +52,8 @@ func ProcessHandler(c *gin.Context) {
 
 		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", outdicomPath, "-m", metaPath)
                 if err := cmd.Run(); err != nil {
-                        continue
+                        // continue
+			c.JSON(http.StatusOK, gin.H{"error": err})
                 }
 
 		processedFiles = append(processedFiles, gin.H{

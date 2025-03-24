@@ -24,16 +24,28 @@ def read_xray(path, voi_lut=True, fix_monochrome=True):
 
     return data, dicom
 
+def extract_dicom_metadata(dicom_path, json_path):
+    # Load DICOM file without pixel data
+    dicom_data = pydicom.dcmread(dicom_path, stop_before_pixels=True)
+
+    # Convert all metadata (excluding pixel data) to a dictionary
+    metadata = {}
+    for elem in dicom_data.iterall():
+        metadata[elem.name] = str(elem.value)
+
+    # Save metadata as JSON
+    with open(json_path, "w", encoding="utf-8") as json_file:
+        json.dump(metadata, json_file, indent=4)
+
+    print(f"Metadata saved to {json_path}")
+
 def dicom_to_png(dicom_path, png_path, metadata_path):
     pixel_data, dicom = read_xray(dicom_path, voi_lut=False)
 
     # Lưu ảnh PNG
     Image.fromarray(pixel_data).save(png_path, format="PNG")
-
     # Lưu metadata thành JSON
-    metadata = {tag.keyword: dicom.get(tag.keyword, "") for tag in dicom.keys()}
-    with open(metadata_path, "w") as json_file:
-        json.dump(metadata, json_file, indent=4)
+    extract_dicom_metadata(dicom_path, metadata_path)
 
     print(f"✅ Đã chuyển đổi: {dicom_path} -> {png_path} | Metadata: {metadata_path}")
 

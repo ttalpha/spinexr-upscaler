@@ -16,8 +16,8 @@ func UploadHandler(c *gin.Context) {
 	bit := c.PostForm("bit")
 
 	// Kiểm tra giá trị upscale hợp lệ
-	if upscale != "x2" && upscale != "x4" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Upscale must be 'x2' or 'x4'"})
+	if upscale != "2" && upscale != "4" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Upscale must be '2' or '4'"})
 		return
 	}
 
