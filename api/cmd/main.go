@@ -3,35 +3,37 @@ package main
 import (
 	"log"
 	"os"
-	"path/filepath"
 	"time"
-
+	"su-api/internal/handlers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"su-api/internal/handlers"
+	"path/filepath"
 )
 
-const dataDir = "data"
 const timeClr = 6
 const autoClr = false
 
 func cleanDataFolder() {
-	for {
-		time.Sleep(timeClr * time.Hour)
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
 
-		files, err := filepath.Glob(filepath.Join(dataDir, "*"))
+	for {
+		<-ticker.C
+
+		files, err := os.ReadDir("uploads")
 		if err != nil {
-			log.Println("Lỗi khi lấy danh sách file:", err)
+			log.Println("Error reading directory:", err)
 			continue
 		}
 
 		for _, file := range files {
-			err := os.Remove(file)
-			if err != nil {
-				log.Println("Lỗi khi xóa file:", file, err)
-			} else {
-				log.Println("Đã xóa file:", file)
+			userDir := filepath.Join("uploads", file.Name())
+			if info, err := os.Stat(userDir); err == nil && info.IsDir() {
+				if time.Since(info.ModTime()) > 24*time.Hour {
+					os.RemoveAll(userDir)
+					log.Printf("Deleted old user directory: %s", userDir)
+				}
 			}
 		}
 	}
@@ -58,12 +60,11 @@ func realMain() int {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.POST("/upload", handlers.UploadHandler)
-	r.POST("/process/:uuid", handlers.ProcessHandler)
-	r.GET("/download/:uuid", handlers.DownloadHandler)
-	r.GET("/uuid", handlers.ListUUIDHandler)
+	r.POST("/upload", handlers.UploadAndProcessHandler)
+	r.GET("/image/:userId/:filename", handlers.ImageHandler)
+	r.GET("/:userId/images", handlers.ListImagesHandler)
 
-	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
 
