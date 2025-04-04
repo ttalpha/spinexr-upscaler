@@ -36,49 +36,38 @@ Gửi file DICOM với thông số **upscale** (chỉ nhận `2` hoặc `4`) và
 curl -X POST http://localhost:8080/upload \
      -F "file=@scan1.dcm" \
      -F "file=@scan2.dcm" \
-     -F "upscale=x2" \
-     -F "bit=8"
+     -F "upscale=4" \
+     -F "bit=16"
 ```
 **Phản hồi mẫu:**
 ```json
 {
-  "message": "Files uploaded successfully",
+  "message": "Files uploaded and processed",
   "files": [
-    { "uuid": "123e4567-e89b-12d3-a456-426614174000", "path": "data/123e4567-e89b-12d3-a456-426614174000.dcm", "upscale": "x2", "bit": "8" }
-  ]
-}
-```
-
-### Xử lý file DICOM
-Sử dụng UUID nhận được khi upload để xử lý file.
-```sh
-curl -X POST "http://localhost:8080/process/123e4567-e89b-12d3-a456-426614174000?upscale=4&bit=16"
-```
-**Phản hồi mẫu:**
-```json
-{
-  "message": "Processing completed",
-  "files": [
-    { "uuid": "123e4567-e89b-12d3-a456-426614174000", "output": "data/123e4567-e89b-12d3-a456-426614174000_processed.png", "upscale": "4", "bit": "16" }
+    { "filename": "scan1.dcm", "output": "uploads/u_abc123/1743418533703/scan1_processed.dicom", "userId": "abc123" },
+    { "filename": "scan2.dcm", "output": "uploads/u_abc123/1743418533703/scan2_processed.dicom", "userId": "abc123" }
   ]
 }
 ```
 
 ### Tải file đã xử lý
 ```sh
-curl -O http://localhost:8080/download/123e4567-e89b-12d3-a456-426614174000
+curl -O http://localhost:8080/image/abc123/1743418533703/scan1_processed.dicom
 ```
 File PNG sẽ được tải về.
 
-### Get list of existing UUIDs
+### Lấy danh sách ảnh đã xử lý của user
 ```sh
-curl -X GET "http://localhost:8080/uuid"
+curl -X GET http://localhost:8080/abc123/images
 ```
 **Phản hồi mẫu:**
 Response:
 ```json
 {
-  "uuids": ["uuid1", "uuid2", "uuid3"]
+  "images": [
+    { "filename": "scan1_processed.dicom", "path": "uploads/u_abc123/1743418533703/scan1_processed.dicom" },
+    { "filename": "scan2_processed.dicom", "path": "uploads/u_abc123/1743418533703/scan2_processed.dicom" }
+  ]
 }
 ```
 
@@ -87,45 +76,67 @@ Response:
 ## 3. Câu trúc API
 | Method | Endpoint               | Description |
 |--------|------------------------|-------------|
-| POST   | `/upload`              | Upload file DICOM |
-| POST   | `/process/:uuid`       | Process file DICOM |
-| GET    | `/download/:uuid`      | Download processed PNG |
-| GET    | `/uuid`                | Get list of existing UUIDs |
+| POST   | `/upload`              | Upload file DICOM và xử lý |
+| GET    | `/image/:userId/:filename`      | Tải file DICOM đã xử lý của user |
+| GET    | `/:userId/images`                | Lấy danh sách ảnh đã xử lý của user |
 
 ---
 
 ## 4. Cấu trúc thư mục
 ```bash
-┌─[dora@localhost]─[~/su-api]
-└──╼ $tree ./
+tree -L3 ./
 ./
-├── assets
-│   └── dicom
-│       └── 0a7f1942e568e05704c976da16c9d1a5.dicom
 ├── cmd
 │   └── main.go
 ├── go.mod
 ├── go.sum
 ├── internal
 │   ├── handlers
-│   │   ├── download.go
-│   │   ├── process.go
-│   │   ├── upload.go
-│   │   └── uuid.go
+│   │   ├── imageHandler.go
+│   │   ├── listImagesHandler.go
+│   │   └── uploads.go
 │   ├── services
 │   │   ├── dicom.go
-│   │   ├── exec.go
-│   │   └── process.go
+│   │   └── exec.go
 │   └── utils
 │       └── file.go
 ├── LICENSE
 ├── main.go -> cmd/main.go
 ├── Makefile
+├── models -> ../models
 ├── README.md
-└── scripts
-    └── process.py
+├── scripts
+│   ├── dicom_to_png.py
+│   └── png_to_dicom.py
+├── uploads
+└── vendor
+    ├── github.com
+    │   ├── bytedance
+    │   ├── cloudwego
+    │   ├── gabriel-vasile
+    │   ├── gin-contrib
+    │   ├── gin-gonic
+    │   ├── goccy
+    │   ├── google
+    │   ├── go-playground
+    │   ├── joho
+    │   ├── json-iterator
+    │   ├── klauspost
+    │   ├── leodido
+    │   ├── mattn
+    │   ├── modern-go
+    │   ├── pelletier
+    │   ├── twitchyliquid64
+    │   └── ugorji
+    ├── golang.org
+    │   └── x
+    ├── google.golang.org
+    │   └── protobuf
+    ├── gopkg.in
+    │   └── yaml.v3
+    └── modules.txt
 
-9 directories, 17 files
+33 directories, 17 files
 ```
 
 ---

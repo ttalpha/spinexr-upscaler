@@ -4,33 +4,35 @@ import (
 	"log"
 	"os"
 	"time"
-
+	"su-api/internal/handlers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"su-api/internal/handlers"
+	"path/filepath"
 )
 
 const timeClr = 6
 const autoClr = false
 
 func cleanDataFolder() {
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
 	for {
-		time.Sleep(timeClr * time.Hour)
+		<-ticker.C
 
 		files, err := os.ReadDir("uploads")
 		if err != nil {
-			log.Println("Lỗi khi lấy danh sách file:", err)
+			log.Println("Error reading directory:", err)
 			continue
 		}
 
 		for _, file := range files {
-			// Lọc các thư mục con không phải của user
-			if file.IsDir() {
-				if err := os.RemoveAll("uploads/" + file.Name()); err != nil {
-					log.Println("Lỗi khi xóa thư mục:", file.Name(), err)
-				} else {
-					log.Println("Đã xóa thư mục:", file.Name())
+			userDir := filepath.Join("uploads", file.Name())
+			if info, err := os.Stat(userDir); err == nil && info.IsDir() {
+				if time.Since(info.ModTime()) > 24*time.Hour {
+					os.RemoveAll(userDir)
+					log.Printf("Deleted old user directory: %s", userDir)
 				}
 			}
 		}
@@ -38,7 +40,6 @@ func cleanDataFolder() {
 }
 
 func realMain() int {
-	// Tải file .env
 	if err := godotenv.Load(); err != nil {
 		log.Println("Không tìm thấy file .env, sử dụng giá trị mặc định")
 	}
@@ -48,10 +49,8 @@ func realMain() int {
 		allowedOrigins = "*"
 	}
 
-	// Khởi tạo Gin router
 	r := gin.Default()
 
-	// CORS middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{allowedOrigins},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
@@ -61,27 +60,23 @@ func realMain() int {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.POST("/uploads/:userId", handlers.UploadsHandler) // Upload và xử lý ảnh
-	r.GET("/image/:userId/:filename", handlers.ImageHandler) // Tải ảnh DICOM của userId
-	r.GET("/:userId/images", handlers.ListImagesHandler) // Lấy danh sách ảnh đã xử lý của userId
+	r.POST("/upload", handlers.UploadAndProcessHandler)
+	r.GET("/image/:userId/:filename", handlers.ImageHandler)
+	r.GET("/:userId/images", handlers.ListImagesHandler)
 
-	// Khởi tạo thư mục uploads nếu chưa có
 	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
 
-	// Xóa dữ liệu tự động
 	if autoClr {
 		go cleanDataFolder()
 	}
 
-	// Cấu hình port
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// Khởi động server
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Lỗi khi khởi động server:", err)
 	}
