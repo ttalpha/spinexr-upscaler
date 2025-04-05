@@ -21,38 +21,36 @@ def read_xray(path, voi_lut=True, fix_monochrome=True):
     data = data / np.max(data)
     data = (data * 65535).astype(np.uint16)
 
-    return data, dicom
+    return data
 
 def extract_dicom_metadata(dicom_path, json_path):
-    # Load DICOM file without pixel data
     dicom_data = pydicom.dcmread(dicom_path, stop_before_pixels=True)
-
-    # Convert all metadata (excluding pixel data) to a dictionary
     metadata = {}
-    for elem in dicom_data.iterall():
-        metadata[elem.name] = str(elem.value)
 
-    # Save metadata as JSON
+    for elem in dicom_data.iterall():
+        is_multivalue = isinstance(elem.value, pydicom.multival.MultiValue)
+        value = elem.value if not is_multivalue else [str(v) for v in elem.value]
+
+        if elem.keyword:
+            metadata[elem.keyword] = value
+
     with open(json_path, "w", encoding="utf-8") as json_file:
-        json.dump(metadata, json_file, indent=4)
+        json.dump(metadata, json_file, indent=4, default=str)
 
     print(f"Metadata saved to {json_path}")
 
+
 def dicom_to_png(dicom_path, png_path, metadata_path):
-    pixel_data, dicom = read_xray(dicom_path, voi_lut=False)
-
-    # Lưu ảnh PNG
+    pixel_data = read_xray(dicom_path, voi_lut=False)
     Image.fromarray(pixel_data).save(png_path, format="PNG")
-    # Lưu metadata thành JSON
     extract_dicom_metadata(dicom_path, metadata_path)
+    print(f"✅ Converted: {dicom_path} -> {png_path} | Metadata: {metadata_path}")
 
-    print(f"✅ Đã chuyển đổi: {dicom_path} -> {png_path} | Metadata: {metadata_path}")
 
-# Setup tham số dòng lệnh
-parser = argparse.ArgumentParser(description="Chuyển đổi DICOM sang PNG và lưu metadata JSON")
-parser.add_argument("-i", "--input", required=True, help="Đường dẫn file DICOM")
-parser.add_argument("-o", "--output", required=True, help="Đường dẫn file PNG đầu ra")
-parser.add_argument("-m", "--metadata", required=True, help="Đường dẫn file metadata JSON")
+parser = argparse.ArgumentParser(description="Convert DICOM to PNG and extract metadata")
+parser.add_argument("-i", "--input", required=True, help="Path to DICOM file")
+parser.add_argument("-o", "--output", required=True, help="Path to output PNG file")
+parser.add_argument("-m", "--metadata", required=True, help="Path to output metadata JSON file")
 
 args = parser.parse_args()
 dicom_to_png(args.input, args.output, args.metadata)

@@ -46,7 +46,6 @@ def process_dicom_with_png(test_png_folder, test_dicom_folder, output_folder):
 
         # Save the modified DICOM file
         output_dicom_path = os.path.join(output_folder, f"{file_id}.dicom")
-        ds.save_as(output_dicom_path)
         print(f"Modified DICOM saved: {output_dicom_path}")
 
 # Example usage
