@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,10 +25,15 @@ func ListImagesHandler(c *gin.Context) {
 		}
 
 		if !info.IsDir() && (filepath.Ext(info.Name()) == ".dicom" || filepath.Ext(info.Name()) == ".dcm") {
-			images = append(images, gin.H{
-				"filename": info.Name(),
-				"path":     path,
-			})
+			parts := strings.Split(path, string(os.PathSeparator))
+			if len(parts) > 2 {
+				timestamp := parts[len(parts)-2]
+				images = append(images, gin.H{
+					"filename": info.Name(),
+					"size": 	 info.Size(),
+					"timestamp": timestamp,
+				})
+			}
 		}
 
 		return nil

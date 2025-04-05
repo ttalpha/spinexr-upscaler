@@ -3,32 +3,30 @@ package main
 import (
 	"log"
 	"os"
-	"time"
+	"path/filepath"
 	"su-api/internal/handlers"
+	"time"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"path/filepath"
 )
 
-const timeClr = 6
-const autoClr = false
-
 func cleanDataFolder() {
-	ticker := time.NewTicker(24 * time.Hour)
+	ticker := time.NewTicker(24*time.Hour)
 	defer ticker.Stop()
 
 	for {
 		<-ticker.C
 
-		files, err := os.ReadDir("uploads")
+		userDirs, err := os.ReadDir("uploads")
 		if err != nil {
 			log.Println("Error reading directory:", err)
 			continue
 		}
 
-		for _, file := range files {
-			userDir := filepath.Join("uploads", file.Name())
+		for _, userDir := range userDirs {
+			userDir := filepath.Join("uploads", userDir.Name())
 			if info, err := os.Stat(userDir); err == nil && info.IsDir() {
 				if time.Since(info.ModTime()) > 24*time.Hour {
 					os.RemoveAll(userDir)
@@ -41,7 +39,7 @@ func cleanDataFolder() {
 
 func realMain() int {
 	if err := godotenv.Load(); err != nil {
-		log.Println("Không tìm thấy file .env, sử dụng giá trị mặc định")
+		log.Println("No .env file found, using default environment variables")
 	}
 
 	allowedOrigins := os.Getenv("CORS_ORIGIN")
@@ -60,17 +58,15 @@ func realMain() int {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.POST("/upload", handlers.UploadAndProcessHandler)
-	r.GET("/image/:userId/:filename", handlers.ImageHandler)
+	r.POST("/upload", handlers.UploadsHandler)
+	r.GET("/image/:userId/:timestamp/:filename", handlers.ImageHandler)
 	r.GET("/:userId/images", handlers.ListImagesHandler)
 
 	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
 
-	if autoClr {
-		go cleanDataFolder()
-	}
+	go cleanDataFolder()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -78,7 +74,7 @@ func realMain() int {
 	}
 
 	if err := r.Run(":" + port); err != nil {
-		log.Fatal("Lỗi khi khởi động server:", err)
+		log.Fatal("Error running the server:", err)
 	}
 
 	return 0

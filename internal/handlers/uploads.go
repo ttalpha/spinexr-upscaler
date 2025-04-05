@@ -1,29 +1,24 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
+	"strconv"
+	"strings"
 	"su-api/internal/utils"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 const dataDir = "uploads"
 
 func UploadsHandler(c *gin.Context) {
-	userId := c.Param("userId")
-	upscale := c.DefaultPostForm("upscale", "2")
-	bit := c.DefaultPostForm("bit", "8")
-
-	if upscale != "2" && upscale != "4" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Upscale must be '2' or '4'"})
-		return
-	}
-
-	if bit != "8" && bit != "16" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bit must be '8' or '16'"})
+	userId := c.PostForm("userId")
+	if userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is missing"})
 		return
 	}
 
@@ -39,14 +34,19 @@ func UploadsHandler(c *gin.Context) {
 		return
 	}
 
+	if len(files) > 3 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Too many files uploaded"})
+		return
+	}
+
 	timestamp := time.Now().UnixMilli()
-	userDir := filepath.Join(dataDir, "u_"+userId, string(timestamp))
+	uploadedFiles := make([]gin.H, 0, len(files))
+	userDir := filepath.Join(dataDir, "u_"+userId, strconv.FormatInt(timestamp, 10))
 	if err := os.MkdirAll(userDir, os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
 		return
 	}
 
-	uploadedFiles := []gin.H{}
 	for _, file := range files {
 		if !utils.IsDICOM(file.Filename) {
 			continue
@@ -58,22 +58,19 @@ func UploadsHandler(c *gin.Context) {
 		}
 
 		dicomPath := filePath
-		metaPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + ".json"
 		outpngPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + ".png"
-		outpngUpPath := filepath.Join(userDir, "output.png")
-		outdicomPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + "_processed.dicom"
+		outpngUpPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + "_out.png"
 
-		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath, "-m", metaPath)
+		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
 
-		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-t", "512", "-mp", "models/weights/g_x"+upscale+".pth")
+		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", userDir, "-t", "512", "-mp", "models/weights/g_x4_v3.pth")
 		if err := cmd.Run(); err != nil {
 			continue
 		}
-
-		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", outdicomPath, "-m", metaPath)
+		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", dicomPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
@@ -81,16 +78,21 @@ func UploadsHandler(c *gin.Context) {
 		os.Remove(outpngPath)
 		os.Remove(outpngUpPath)
 
-		uploadedFiles = append(uploadedFiles, gin.H{
-			"filename": file.Filename,
-			"output":   outdicomPath,
-			"userId":   userId,
-		})
-	}
-
-	if len(uploadedFiles) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid DICOM files uploaded"})
-		return
+		// get file size of the output dicom file
+		fileInfo, err := os.Stat(dicomPath)
+		if err != nil {
+			continue
+		}
+		fileSize := fileInfo.Size()
+		parts := strings.Split(dicomPath, string(os.PathSeparator))
+		if len(parts) > 2 {
+				timestamp := parts[len(parts)-2]
+				uploadedFiles = append(uploadedFiles, gin.H{
+					"filename": file.Filename,
+					"size": 	 fileSize,
+					"timestamp": timestamp,
+				})
+			}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Files uploaded and processed", "files": uploadedFiles})
