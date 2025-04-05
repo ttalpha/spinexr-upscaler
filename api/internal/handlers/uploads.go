@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"su-api/internal/utils"
 	"time"
 
@@ -80,12 +81,15 @@ func UploadsHandler(c *gin.Context) {
 			continue
 		}
 		fileSize := fileInfo.Size()
-
-		uploadedFiles = append(uploadedFiles, gin.H{
-			"filename": file.Filename,
-			"output":   dicomPath,
-			"size":     fileSize,
-		})
+		parts := strings.Split(dicomPath, string(os.PathSeparator))
+		if len(parts) > 2 {
+				timestamp := parts[len(parts)-2]
+				uploadedFiles = append(uploadedFiles, gin.H{
+					"filename": file.Filename,
+					"size": 	 fileSize,
+					"timestamp": timestamp,
+				})
+			}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Files uploaded and processed", "files": uploadedFiles})
