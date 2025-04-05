@@ -8,7 +8,7 @@ import {
 import { useAnonUserId } from "@/hooks/use-anon-user-id";
 import { ClockIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { Tabs } from "@radix-ui/react-tabs";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FileRejection } from "react-dropzone";
 import { toast } from "sonner";
 import { Dropzone } from "./components/main/dropzone";
@@ -18,15 +18,10 @@ import { Toaster } from "./components/ui/sonner";
 import { TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { HistoryList } from "@/components/history/history-list";
 import { cn } from "./lib/utils";
+import { HistoryFile } from "./types/history-file";
 
 function App() {
-  const [historyFiles, setHistoryFiles] = useState([
-    { name: "340928mkdsfalkj2809123.dcm", size: 2480324, recent: true },
-    { name: "f0f1dg3b94389a724f2098.dcm", size: 13809801, recent: false },
-    { name: "afdsjflkajds.dicom", size: 98908102, recent: false },
-    { name: "10714890340890fdjlak.dicom", size: 74380123, recent: false },
-    { name: "a9080adlkfarucjfm.dicom", size: 8901382, recent: false },
-  ]);
+  const [historyFiles, setHistoryFiles] = useState<HistoryFile[]>([]);
   const [loading, setLoading] = useState(false);
 
   const { userId } = useAnonUserId();
@@ -58,6 +53,18 @@ function App() {
     });
   }, []);
 
+  useEffect(() => {
+    const fetchHistoryFiles = async () => {
+      if (!userId) return;
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/${userId}/images`
+      );
+      const data = await res.json();
+      setHistoryFiles(data.images);
+    };
+    fetchHistoryFiles();
+  }, [userId]);
+
   const onFilesSubmit = useCallback(async () => {
     if (!userId) {
       toast.error("Submit files error", {
@@ -73,20 +80,24 @@ function App() {
     }
     submitData.append("userId", userId);
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
         method: "POST",
         body: submitData,
       });
-      setHistoryFiles([
-        ...files.map((file) => ({
-          name: file.name,
-          size: file.size,
-          recent: true,
-        })),
-        ...historyFiles,
+      const data = await res.json();
+      const files: HistoryFile[] = data.files;
+      console.log({ images: files });
+
+      setHistoryFiles((prev) => [
+        ...files.map((image) => ({ ...image, recent: true })),
+        ...prev,
       ]);
+      setFiles([]);
+      setTab("history");
     } catch (error) {
       toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   }, [files, userId]);
   return (
@@ -127,7 +138,7 @@ function App() {
                     <div className="animate-moving-border absolute inset-0 h-full w-full rounded-full bg-[conic-gradient(#0ea5e9_20deg,transparent_120deg)]" />
                   )}
                   <div className="relative z-20 w-full rounded-[0.60rem] bg-white p-4">
-                    <CardHeader>
+                    <CardHeader className="px-0">
                       <CardTitle>Spine X-ray Resolution Enhancer</CardTitle>
                       <CardDescription>
                         {tab === "upscale"
@@ -137,7 +148,7 @@ function App() {
                           : "Your files will be saved up to 24 hours. After which, they will be deleted."}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-0">
                       <TabsContent
                         className="grid gap-y-4 mt-6"
                         value="upscale"

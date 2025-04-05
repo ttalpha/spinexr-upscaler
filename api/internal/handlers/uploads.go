@@ -34,6 +34,11 @@ func UploadsHandler(c *gin.Context) {
 		return
 	}
 
+	if len(files) > 3 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Too many files uploaded"})
+		return
+	}
+
 	timestamp := time.Now().UnixMilli()
 	uploadedFiles := make([]gin.H, 0, len(files))
 	userDir := filepath.Join(dataDir, "u_"+userId, strconv.FormatInt(timestamp, 10))

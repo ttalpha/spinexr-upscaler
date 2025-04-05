@@ -6,7 +6,7 @@ export const useAnonUserId = () => {
 
   useEffect(() => {
     let savedUserId = localStorage.getItem("userId");
-    if (!savedUserId) savedUserId = uniqid("u_");
+    if (!savedUserId) savedUserId = uniqid();
     setUserId(savedUserId);
   }, []);
 

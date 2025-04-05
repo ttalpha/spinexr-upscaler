@@ -7,9 +7,25 @@ interface HistoryListProps {
 }
 
 export const HistoryList = ({ historyFiles, userId }: HistoryListProps) => {
+  const groupFilesByDate = (files: HistoryFile[]) => {
+    const groupedFiles: { [key: string]: HistoryFile[] } = {};
+    files.forEach((file) => {
+      const date = new Date(+file.timestamp).toLocaleString("en-US");
+      if (!groupedFiles[date]) {
+        groupedFiles[date] = [];
+      }
+      groupedFiles[date].push(file);
+    });
+    return groupedFiles;
+  };
+  const groupedFiles = groupFilesByDate(historyFiles);
+  const sortedDates = Object.keys(groupedFiles).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  );
+
   if (historyFiles.length === 0)
     return (
-      <div className="flex flex-col items-center justify-center gap-y-4">
+      <div className="mt-6 flex flex-col items-center justify-center gap-y-4">
         <img
           src="src/assets/no_data.svg"
           height="150px"
@@ -23,14 +39,22 @@ export const HistoryList = ({ historyFiles, userId }: HistoryListProps) => {
     );
   return (
     <ul className="mt-6 grid gap-4">
-      {historyFiles.map((file) => (
-        <DownloadFileItem
-          recent={file.recent}
-          userId={userId}
-          key={file.name}
-          name={file.name}
-          size={file.size}
-        />
+      {sortedDates.map((date) => (
+        <li key={date}>
+          <h3 className="text-sm mb-3 font-medium text-gray-900">{date}</h3>
+          <ul className="grid gap-4">
+            {groupedFiles[date].map((file) => (
+              <DownloadFileItem
+                timestamp={file.timestamp}
+                recent={file.recent}
+                userId={userId}
+                key={`${file.timestamp}_${file.filename}`}
+                name={file.filename}
+                size={file.size}
+              />
+            ))}
+          </ul>
+        </li>
       ))}
     </ul>
   );

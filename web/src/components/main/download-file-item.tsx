@@ -17,6 +17,7 @@ import {
 interface FileItemProps {
   name: string;
   size: number;
+  timestamp: string;
   recent: boolean;
   userId: string | null;
 }
@@ -24,6 +25,7 @@ interface FileItemProps {
 export const DownloadFileItem = ({
   name,
   size,
+  timestamp,
   userId,
   recent,
 }: FileItemProps) => {
@@ -39,7 +41,18 @@ export const DownloadFileItem = ({
         });
         return;
       }
-      await fetch(`${import.meta.env.VITE_API_URL}/${userId}/${name}`);
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/image/${userId}/${timestamp}/${name}`
+      );
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       toast.error("Something went wrong");
     }

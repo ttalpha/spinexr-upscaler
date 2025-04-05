@@ -1,5 +1,6 @@
 export interface HistoryFile {
-  name: string;
+  filename: string;
   size: number;
+  timestamp: string;
   recent: boolean;
 }
