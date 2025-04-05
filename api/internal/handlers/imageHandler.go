@@ -1,15 +1,16 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"path/filepath"
+	"github.com/gin-gonic/gin"
 )
 
-func DownloadHandler(c *gin.Context) {
-	fileUUID := c.Param("uuid")
-	filePath := filepath.Join(dataDir, fileUUID+"_processed.png")
+func ImageHandler(c *gin.Context) {
+	userId := c.Param("userId")
+	filename := c.Param("filename")
+	filePath := filepath.Join("uploads", "u_"+userId, filename)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
