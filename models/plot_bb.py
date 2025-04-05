@@ -3,7 +3,7 @@ import os
 import cv2
 import pandas as pd
 
-GENERATED_DIR = 'results/ftx4_png'
+GENERATED_DIR = 'results/ftx4_v3'
 GT_DIR = 'datasets/test_png'
 
 def plot_bounding_boxes(image_id):
@@ -33,10 +33,10 @@ def plot_bounding_boxes(image_id):
       'Disc_space_narrowing': (0, 0, 255),
       'Foraminal_stenosis': (255, 0, 0),
       'Osteophytes': (0, 255, 0),
-      'Other_lesions': (0, 255, 255),
       'Spondylolysthesis': (255, 0, 255),
       'Surgical_implant': (0, 165, 255),
-      'Vertebral_collapse': (255, 192, 203)
+      'Vertebral_collapse': (255, 192, 203),
+      'Other_lesions': (0, 255, 255),
   }
 
   # Draw bounding boxes on the image
@@ -62,9 +62,9 @@ def plot_bounding_boxes(image_id):
 
 
 # Example usage
-image_id = 'f4ba96ce342048023be867176c70d1fb'
-# image_file_paths = [os.path.join(GT_DIR, f.split('.')[0])
-#                     for f in os.listdir(GT_DIR)]
-# for image_file_path in image_file_paths:
-#   image_id = image_file_path.split('/')[-1]
-plot_bounding_boxes(image_id)
+image_file_paths = [os.path.join(GENERATED_DIR, f.split('.')[0])
+                    for f in os.listdir(GENERATED_DIR)]
+for image_file_path in image_file_paths:
+  image_id = image_file_path.split('/')[-1].split('_')[0]
+  print(image_id)
+  plot_bounding_boxes(image_id)

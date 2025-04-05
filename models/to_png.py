@@ -37,7 +37,7 @@ def dicom_to_png(dicom_path, png_path):
     except Exception as e:
         logger.error(f"Error processing {dicom_path}: {e}")
 
-def process_directory_parallel(input_dir, output_dir, num_workers=8, limit=30):
+def process_directory_parallel(input_dir, output_dir, num_workers=8, limit=4000):
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)  # Ensure output directory exists
@@ -66,8 +66,8 @@ def process_directory_parallel(input_dir, output_dir, num_workers=8, limit=30):
     logger.info("Parallel conversion complete!")
 
 # Directories
-test_dicom_dir = "datasets/output_dicom"
-test_png_dir = "datasets/test_png_x4_out"
+test_dicom_dir = "datasets/test_images"
+test_png_dir = "datasets/test_png"
 
 # Process train and test directories in parallel
 process_directory_parallel(test_dicom_dir, test_png_dir, num_workers=4)

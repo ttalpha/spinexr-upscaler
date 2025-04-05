@@ -1,0 +1,15 @@
+train: data/images/train
+val: data/images/val
+test: data/images/test
+
+nc: 7
+names:
+  [
+    "Disc_space_narrowing",
+    "Foraminal_stenosis",
+    "Osteophytes",
+    "Other_lesions",
+    "Spondylolysthesis",
+    "Surgical_implant",
+    "Vertebral_collapse",
+  ]

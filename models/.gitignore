@@ -1,5 +1,8 @@
 # ignored folders
 datasets/*
+plots/
+content
+*.pt
 experiments/*
 results/*
 tb_logger/*
@@ -16,7 +19,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+runs/
 # Distribution / packaging
 .Python
 build/

@@ -3,9 +3,15 @@ import cv2
 import concurrent.futures
 import random
 import numpy as np
+import argparse
+
+# Argument parser
+parser = argparse.ArgumentParser(description='Degrade JPG images.')
+parser.add_argument('-s', '--scale', type=int, default=4, help='Downscale factor')
+args = parser.parse_args()
 
 # Downscale factor
-downscale_factor = 4
+downscale_factor = args.scale
 
 _set = 'test'
 
@@ -13,23 +19,18 @@ _set = 'test'
 input_dir = f'datasets/{_set}_jpeg'
 output_dir = f'datasets/{_set}_jpeg_x{downscale_factor}'
 
-noise_types = ['gaussian', 'sap', 'poisson']
-# Ensure output directory exists
+noise_types = ['gaussian', 'sap', 'poisson', 'speckle']
 os.makedirs(output_dir, exist_ok=True)
 
-# Dictionary to store effects applied to each image
-effects_dict = {}
-
 def add_gaussian_noise(image):
-    """Subtle Gaussian noise"""
     mean = 0
     stddev = random.uniform(5, 15)
     noise = np.random.normal(mean, stddev, image.shape).astype(np.uint8)
     return cv2.addWeighted(image, 0.9, noise, 0.1, 0.0)
 
 def add_poisson_noise(image):
-    """Add Poisson noise"""
-    image = np.random.poisson(image / 255.0 * 100) / 100 * 255
+    noise_scale = random.uniform(80, 100)
+    image = np.random.poisson(image / 255.0 * noise_scale) / noise_scale * 255
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
@@ -53,51 +54,50 @@ def add_salt_and_pepper_noise(image, prob=0.03):
 
     return noisy_image
 
+def add_speckle_noise(image):
+    noise = np.random.normal(0, 1, image.shape).astype(np.float64)
+    dst_speckle = 0.9 * image + 0.1 * image * noise
+    dst_speckle = np.clip(dst_speckle, 0, 255).astype(np.uint8)
 
 def add_motion_blur(image):
-    size = random.randint(3, 8)
-    angle = random.uniform(-360, 360)
-    kernel = np.zeros((size, size))
-    kernel[(size - 1) // 2, :] = np.ones(size)
-    rotation_matrix = cv2.getRotationMatrix2D((size // 2, size // 2), angle, 1)
-    kernel = cv2.warpAffine(kernel, rotation_matrix, (size, size))
-    kernel /= np.sum(kernel)
-    return cv2.filter2D(image, -1, kernel)
+    kernel_size = random.randint(3, 7)
+    kernel = np.zeros((kernel_size, kernel_size), dtype=np.float32)
+    kernel[kernel_size // 2, :] = np.ones(kernel_size, dtype=np.float32)
+    kernel /= kernel_size
+    blurred_image = cv2.filter2D(image, -1, kernel)
+    return blurred_image
 
-sap_count = 0
-gaussian_count = 0
-poisson_count = 0
-
-def downscale_image(filename):
-    global sap_count, gaussian_count, poisson_count
-    print('Processing:', filename)
-    if filename.endswith('.jpg'):
+def degrade_image(filename):
+    if filename.endswith('.jpeg'):
         img_path = os.path.join(input_dir, filename)
-        img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+        img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED).astype(np.uint8)
+        if img is None:
+            print(f"Failed to load image {img_path}")
+            return
 
         new_size = (img.shape[1] // downscale_factor, img.shape[0] // downscale_factor)
         img_resized = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA).astype(np.uint8)
 
-        if random.random() < 0.8:
-            noise_type = random.choice(noise_types)
-            print(noise_type, filename)
+        # Randomly apply degradation effects
+        if random.random() < 0.6:
+            img_resized = add_motion_blur(img_resized)
+            print('motion_blur', filename)
 
+        if random.random() < 0.6:
+            noise_type = random.choice(noise_types)
             if noise_type == 'gaussian':
                 img_resized = add_gaussian_noise(img_resized)
-                gaussian_count += 1
             elif noise_type == 'poisson':
                 img_resized = add_poisson_noise(img_resized)
-                poisson_count += 1
-            else:
+            elif noise_type == 'sap':
                 img_resized = add_salt_and_pepper_noise(img_resized)
-                sap_count += 1
-
+            else:
+                img_resized = add_speckle_noise(img_resized)
+            print(noise_type, filename)
         output_path = os.path.join(output_dir, filename)
-        cv2.imwrite(output_path, img_resized, [cv2.IMWRITE_JPEG_QUALITY, random.randint(75, 100)])
+        cv2.imwrite(output_path, img_resized, [cv2.IMWRITE_JPEG_QUALITY, random.randint(70, 98)])
 
 input_files = os.listdir(input_dir)
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
-    executor.map(downscale_image, input_files)
-
-print(f"Gaussian: {gaussian_count}, Poisson: {poisson_count}, SAP: {sap_count}")
+    executor.map(degrade_image, input_files)
