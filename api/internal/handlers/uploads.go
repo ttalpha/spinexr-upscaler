@@ -8,10 +8,11 @@ import (
 	"path/filepath"
 	"time"
 	"su-api/internal/utils"
-	"fmt"
 )
 
-func UploadAndProcessHandler(c *gin.Context) {
+const dataDir = "uploads"
+
+func UploadsHandler(c *gin.Context) {
 	userId := c.Param("userId")
 	upscale := c.DefaultPostForm("upscale", "2")
 	bit := c.DefaultPostForm("bit", "8")
@@ -39,8 +40,7 @@ func UploadAndProcessHandler(c *gin.Context) {
 	}
 
 	timestamp := time.Now().UnixMilli()
-	userDir := filepath.Join("uploads", "u_"+userId, fmt.Sprintf("%d", timestamp))
-
+	userDir := filepath.Join(dataDir, "u_"+userId, string(timestamp))
 	if err := os.MkdirAll(userDir, os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
 		return
@@ -58,21 +58,22 @@ func UploadAndProcessHandler(c *gin.Context) {
 		}
 
 		dicomPath := filePath
+		metaPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + ".json"
 		outpngPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + ".png"
 		outpngUpPath := filepath.Join(userDir, "output.png")
 		outdicomPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + "_processed.dicom"
 
-		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath)
+		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath, "-m", metaPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
 
-		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath)
+		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", outpngUpPath, "-t", "512", "-mp", "models/weights/g_x"+upscale+".pth")
 		if err := cmd.Run(); err != nil {
 			continue
 		}
 
-		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", outdicomPath)
+		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", outdicomPath, "-m", metaPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
