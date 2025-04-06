@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+::-webkit-scrollbar {
+  @apply w-2.5 h-2.5;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-gray-300 border-[1px] border-transparent border-solid bg-clip-padding;
+}
+
+@keyframes moving-border {
+  0% {
+    transform: rotate(0deg) scale(10);
+  }
+  100% {
+    transform: rotate(-360deg) scale(10);
+  }
+}
+
+.animate-moving-border {
+  animation: moving-border 10s linear infinite;
+}

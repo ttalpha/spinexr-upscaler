@@ -1,2 +1,7 @@
 node_modules
-.env
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+.env.local
