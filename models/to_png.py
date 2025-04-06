@@ -66,8 +66,8 @@ def process_directory_parallel(input_dir, output_dir, num_workers=8, limit=4000)
     logger.info("Parallel conversion complete!")
 
 # Directories
-test_dicom_dir = "datasets/test_images"
-test_png_dir = "datasets/test_png"
+test_dicom_dir = "datasets/output_dicom"
+test_png_dir = "datasets/output_png"
 
 # Process train and test directories in parallel
 process_directory_parallel(test_dicom_dir, test_png_dir, num_workers=4)

@@ -60,7 +60,7 @@ function App() {
         `${import.meta.env.VITE_API_URL}/${userId}/images`
       );
       const data = await res.json();
-      setHistoryFiles(data.images);
+      setHistoryFiles(data?.images || []);
     };
     fetchHistoryFiles();
   }, [userId]);
@@ -92,6 +92,7 @@ function App() {
         ...files.map((image) => ({ ...image, recent: true })),
         ...prev,
       ]);
+      toast.success("Your DICOM files have been enhanced successfully");
       setFiles([]);
       setTab("history");
     } catch (error) {
@@ -182,6 +183,7 @@ function App() {
                               {files.map((file) => (
                                 <li>
                                   <UploadFileItem
+                                    key={file.name}
                                     removeUploadedFile={removeUploadedFile}
                                     name={file.name}
                                     size={file.size}

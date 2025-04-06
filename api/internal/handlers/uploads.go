@@ -58,11 +58,10 @@ func UploadsHandler(c *gin.Context) {
 		}
 
 		dicomPath := filePath
-		metaPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + ".json"
 		outpngPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + ".png"
 		outpngUpPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + "_out.png"
 
-		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath, "-m", metaPath)
+		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
@@ -71,14 +70,13 @@ func UploadsHandler(c *gin.Context) {
 		if err := cmd.Run(); err != nil {
 			continue
 		}
-		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", dicomPath, "-m", metaPath)
+		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", dicomPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
 
 		os.Remove(outpngPath)
 		os.Remove(outpngUpPath)
-		os.Remove(metaPath)
 
 		// get file size of the output dicom file
 		fileInfo, err := os.Stat(dicomPath)
