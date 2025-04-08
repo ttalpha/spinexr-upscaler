@@ -48,7 +48,7 @@ func realMain() int {
 		allowedOrigins = "*"
 	}
 
-	go CleanupStaleClients()
+	go utils.CleanupStaleClients()
 
 	r := gin.Default()
 
@@ -61,7 +61,7 @@ func realMain() int {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.POST("/upload", RateLimitMiddleware(), handlers.UploadsHandler)
+	r.POST("/upload", utils.RateLimitMiddleware(), handlers.UploadsHandler)
 	r.GET("/image/:userId/:timestamp/:filename", handlers.ImageHandler)
 	r.GET("/:userId/images", handlers.ListImagesHandler)
 
