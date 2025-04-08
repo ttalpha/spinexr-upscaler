@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"su-api/internal/handlers"
+	"su-api/internal/utils"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -13,7 +14,7 @@ import (
 )
 
 func cleanDataFolder() {
-	ticker := time.NewTicker(24*time.Hour)
+	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
 
 	for {
@@ -47,6 +48,8 @@ func realMain() int {
 		allowedOrigins = "*"
 	}
 
+	go CleanupStaleClients()
+
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -58,7 +61,7 @@ func realMain() int {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.POST("/upload", handlers.UploadsHandler)
+	r.POST("/upload", RateLimitMiddleware(), handlers.UploadsHandler)
 	r.GET("/image/:userId/:timestamp/:filename", handlers.ImageHandler)
 	r.GET("/:userId/images", handlers.ListImagesHandler)
 
