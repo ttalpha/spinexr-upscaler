@@ -18,7 +18,7 @@ type Client struct {
 
 var clients = sync.Map{}
 
-func getClientLimiter(ip string, requestLimit int, timeWindow time.Duration) *rate.Limiter {
+func getClientLimiter(ip string, requestLimit int) *rate.Limiter {
 	now := time.Now()
 	val, exists := clients.Load(ip)
 	if exists {
@@ -35,7 +35,7 @@ func getClientLimiter(ip string, requestLimit int, timeWindow time.Duration) *ra
 func RateLimitMiddleware(requestLimit int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
-		limiter := getClientLimiter(ip, requestLimit, timeWindow)
+		limiter := getClientLimiter(ip, requestLimit)
 
 		if !limiter.Allow() {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
