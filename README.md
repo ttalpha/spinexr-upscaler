@@ -24,7 +24,21 @@ go build -o su-api
 ```sh
 ./su-api
 ```
-
+## Chạy trên Docker
+1. **Clone Repository**
+```sh
+git clone https://github.com/ttalpha/spinexr-upscaler.git
+cd spinexr-upscaler
+```
+2. **Build Docker Image**
+```sh
+cd api
+docker build -t spinexr-upscaler .
+```
+3. **Chạy Docker**
+```sh
+docker run -d -p 8080:8080 --gpus all -v $(pwd)/models:/app/models spinexr-upscaler
+```
 ---
 
 ## 2. Sử dụng API với `curl`
