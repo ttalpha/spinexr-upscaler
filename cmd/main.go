@@ -61,9 +61,9 @@ func realMain() int {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.POST("/upload", utils.RateLimitMiddleware(), handlers.UploadsHandler)
-	r.GET("/image/:userId/:timestamp/:filename", handlers.ImageHandler)
-	r.GET("/:userId/images", handlers.ListImagesHandler)
+	r.POST("/upload", utils.RateLimitMiddleware(3), handlers.UploadsHandler)
+	r.GET("/image/:userId/:timestamp/:filename", utils.RateLimitMiddleware(30), handlers.ImageHandler)
+	r.GET("/:userId/images", utils.RateLimitMiddleware(30), handlers.ListImagesHandler)
 
 	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
 		log.Fatal(err)
@@ -84,7 +84,7 @@ func realMain() int {
 }
 
 func main() {
-	if !utils.ChkDir("scripts") {
+	if !utils.ChkDir("scripts") && !utils.ChkDir("models") {
 		log.Fatal("Folder scripts is missing")
 		os.Exit(1)
 	}

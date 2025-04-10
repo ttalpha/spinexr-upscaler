@@ -9,10 +9,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-const (
-	requestLimit = 3
-	timeWindow   = 5 * time.Minute
-)
+var timeWindow time.Duration = 5 * time.Minute
 
 type Client struct {
 	limiter  *rate.Limiter
@@ -21,7 +18,7 @@ type Client struct {
 
 var clients = sync.Map{}
 
-func getClientLimiter(ip string) *rate.Limiter {
+func getClientLimiter(ip string, requestLimit int, timeWindow time.Duration) *rate.Limiter {
 	now := time.Now()
 	val, exists := clients.Load(ip)
 	if exists {
@@ -35,10 +32,10 @@ func getClientLimiter(ip string) *rate.Limiter {
 	return limiter
 }
 
-func RateLimitMiddleware() gin.HandlerFunc {
+func RateLimitMiddleware(requestLimit int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
-		limiter := getClientLimiter(ip)
+		limiter := getClientLimiter(ip, requestLimit, timeWindow)
 
 		if !limiter.Allow() {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
