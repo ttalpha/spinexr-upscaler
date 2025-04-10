@@ -5,7 +5,7 @@ COPY . .
 RUN go build -o su-api .
 
 # Stage 2: Run
-FROM pytorch/pytorch:2.6.0-cuda12.6-cudnn9-devel
+FROM runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
 WORKDIR /app
 EXPOSE 80
 EXPOSE 8080
