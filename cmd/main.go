@@ -84,5 +84,9 @@ func realMain() int {
 }
 
 func main() {
+	if !utils.ChkDir("scripts") {
+		log.Fatal("Folder scripts is missing")
+		os.Exit(1)
+	}
 	os.Exit(realMain())
 }
