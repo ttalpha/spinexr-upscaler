@@ -11,7 +11,7 @@ import (
 
 func ListImagesHandler(c *gin.Context) {
 	userId := c.Param("userId")
-	userDir := filepath.Join("uploads", "u_"+userId)
+	userDir := filepath.Join(filepath.Dir(os.Args[0]), "uploads", "u_"+userId)
 
 	if _, err := os.Stat(userDir); os.IsNotExist(err) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
