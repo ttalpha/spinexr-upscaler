@@ -4,5 +4,5 @@ yolo task=detect \
       data=data.yaml \
       epochs=200 \
       imgsz=640 \
-      batch=48 \
+      batch=32 \
       optimizer=Adam

@@ -5,6 +5,8 @@ import random
 import numpy as np
 import argparse
 
+random.seed(42)
+np.random.seed(42)
 # Argument parser
 parser = argparse.ArgumentParser(description='Degrade PNG images.')
 parser.add_argument('-s', '--scale', type=int, default=4, help='Downscale factor')
@@ -70,20 +72,30 @@ def add_motion_blur(image):
 def degrade_image(filename):
     if filename.endswith('.png'):
         img_path = os.path.join(input_dir, filename)
-        img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED).astype(np.uint16)
-        if img is None:
-            print(f"Failed to load image {img_path}")
+        output_path = os.path.join(output_dir, filename)
+
+        # Skip processing if the file already exists in the output directory
+        if os.path.exists(output_path):
+            print(f"Skipping {filename}, already processed.")
+            return
+        try:
+            img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED).astype(np.uint16)
+            if img is None:
+                print(f"Failed to load image {img_path}")
+                return
+        except Exception as e:
+            print(f"Error reading {img_path}: {e}")
             return
 
         new_size = (img.shape[1] // downscale_factor, img.shape[0] // downscale_factor)
         img_resized = cv2.resize(img, new_size, interpolation=cv2.INTER_AREA).astype(np.uint16)
 
         # Randomly apply degradation effects
-        if random.random() < 0.6:
+        if random.random() < 0.5:
             img_resized = add_motion_blur(img_resized)
             print('motion_blur', filename)
 
-        if random.random() < 0.6:
+        if random.random() < 0.5:
             noise_type = random.choice(noise_types)
             if noise_type == 'gaussian':
                 img_resized = add_gaussian_noise(img_resized)
@@ -93,9 +105,8 @@ def degrade_image(filename):
                 img_resized = add_salt_and_pepper_noise(img_resized)
             else:
                 img_resized = add_speckle_noise(img_resized)
-            print(noise_type, filename)
-        output_path = os.path.join(output_dir, filename)
-        cv2.imwrite(output_path, img_resized, [cv2.IMWRITE_JPEG_QUALITY, random.randint(70, 98)])
+
+        cv2.imwrite(output_path, img_resized, [cv2.IMWRITE_JPEG_QUALITY, random.randint(70, 90)])
 
 input_files = os.listdir(input_dir)
 

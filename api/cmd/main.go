@@ -61,11 +61,11 @@ func realMain() int {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.POST("/upload", utils.RateLimitMiddleware(3), handlers.UploadsHandler)
+	r.POST("/upscale", utils.RateLimitMiddleware(3), handlers.UploadsHandler)
 	r.GET("/image/:userId/:timestamp/:filename", utils.RateLimitMiddleware(30), handlers.ImageHandler)
 	r.GET("/:userId/images", utils.RateLimitMiddleware(30), handlers.ListImagesHandler)
 
-	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+	if err := os.MkdirAll(filepath.Join(filepath.Dir(os.Args[0]), "uploads"), os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
 

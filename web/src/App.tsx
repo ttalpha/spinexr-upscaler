@@ -19,6 +19,7 @@ import { TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { HistoryList } from "@/components/history/history-list";
 import { cn } from "./lib/utils";
 import { HistoryFile } from "./types/history-file";
+import optimizingImage from "@/assets/optimizing.svg";
 
 function App() {
   const [historyFiles, setHistoryFiles] = useState<HistoryFile[]>([]);
@@ -80,7 +81,7 @@ function App() {
     }
     submitData.append("userId", userId);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/upscale`, {
         method: "POST",
         body: submitData,
       });
@@ -158,7 +159,7 @@ function App() {
                           <>
                             <div className="flex flex-col items-center justify-center gap-y-4">
                               <img
-                                src="src/assets/optimizing.svg"
+                                src={optimizingImage}
                                 height="250px"
                                 width="250px"
                                 className="mx-auto"

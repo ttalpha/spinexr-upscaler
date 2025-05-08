@@ -41,7 +41,8 @@ func UploadsHandler(c *gin.Context) {
 
 	timestamp := time.Now().UnixMilli()
 	uploadedFiles := make([]gin.H, 0, len(files))
-	userDir := filepath.Join(dataDir, "u_"+userId, strconv.FormatInt(timestamp, 10))
+	baseDir := filepath.Dir(os.Args[0])
+	userDir := filepath.Join(baseDir, "uploads", "u_"+userId, strconv.FormatInt(timestamp, 10))
 	if err := os.MkdirAll(userDir, os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
 		return
@@ -60,17 +61,16 @@ func UploadsHandler(c *gin.Context) {
 		dicomPath := filePath
 		outpngPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + ".png"
 		outpngUpPath := dicomPath[:len(dicomPath)-len(filepath.Ext(dicomPath))] + "_out.png"
-
-		cmd := exec.Command("python3", "scripts/dicom_to_png.py", "-i", dicomPath, "-o", outpngPath)
+		cmd := exec.Command("python3", filepath.Join(baseDir, "scripts", "dicom_to_png.py"), "-i", dicomPath, "-o", outpngPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}
 
-		cmd = exec.Command("python3", "models/inference_realesrgan.py", "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", userDir, "-t", "512", "-mp", "models/weights/g_x4_v3.pth")
+		cmd = exec.Command("python3", filepath.Join(baseDir, "models", "inference_realesrgan.py"), "-n", "RealESRGAN_x4plus", "-i", outpngPath, "-o", userDir, "-t", "512", "-mp", "models/weights/g_x4_v3.pth")
 		if err := cmd.Run(); err != nil {
 			continue
 		}
-		cmd = exec.Command("python3", "scripts/png_to_dicom.py", "-i", outpngUpPath, "-o", dicomPath)
+		cmd = exec.Command("python3", filepath.Join(baseDir, "scripts", "png_to_dicom.py"), "-i", outpngUpPath, "-o", dicomPath)
 		if err := cmd.Run(); err != nil {
 			continue
 		}

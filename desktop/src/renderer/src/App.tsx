@@ -75,7 +75,7 @@ function App() {
     }
     submitData.append('userId', userId)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/upscale`, {
         method: 'POST',
         body: submitData
       })

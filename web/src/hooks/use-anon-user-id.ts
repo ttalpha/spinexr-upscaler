@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import uniqid from "uniqid";
+import { v4 } from "uuid";
 
 export const useAnonUserId = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     let savedUserId = localStorage.getItem("userId");
-    if (!savedUserId) savedUserId = uniqid();
+    if (!savedUserId) savedUserId = v4();
     setUserId(savedUserId);
   }, []);
 

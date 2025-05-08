@@ -1,5 +1,6 @@
 import { HistoryFile } from "@/types/history-file";
 import { DownloadFileItem } from "@/components/main/download-file-item";
+import noDataImage from "@/assets/no_data.svg";
 
 interface HistoryListProps {
   historyFiles: HistoryFile[];
@@ -27,7 +28,7 @@ export const HistoryList = ({ historyFiles, userId }: HistoryListProps) => {
     return (
       <div className="mt-6 flex flex-col items-center justify-center gap-y-4">
         <img
-          src="src/assets/no_data.svg"
+          src={noDataImage}
           height="150px"
           width="150px"
           className="mx-auto"

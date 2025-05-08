@@ -1,3 +1,7 @@
+# GENERATE TIME: Sun Mar 30 12:31:14 2025
+# CMD:
+# realesrgan/train.py -opt ft_x4_paired.yml --auto_resume
+
 # general settings
 name: ft_SpineXR_x4_paired
 model_type: RealESRGANModel
@@ -19,11 +23,11 @@ datasets:
     type: RealESRGANPairedDataset
     dataroot_gt: datasets/train_png
     dataroot_lq: datasets/train_png_x4
-    meta_info: datasets/meta_info/meta_info_spinexr_16bit.txt
+    meta_info: datasets/meta_info/meta_info_spinexr_pair.txt
     io_backend:
       type: disk
 
-    gt_size: 128
+    gt_size: 224
     use_hflip: True
     use_rot: False
 
@@ -84,10 +88,10 @@ train:
 
   scheduler:
     type: MultiStepLR
-    milestones: [2000, 4000, 6000, 8000] # Later milestones for harder learning
+    milestones: [4000, 8000, 12000, 16000] # Later milestones for harder learning
     gamma: 0.5
 
-  total_iter: 10000 # Extended training to reinforce learning
+  total_iter: 20000 # Extended training to reinforce learning
   warmup_iter: -1 # no warm up
 
   # losses
@@ -141,7 +145,7 @@ train:
 # logging settings
 logger:
   print_freq: 100
-  save_checkpoint_freq: !!float 1e3
+  save_checkpoint_freq: !!float 5e3
   use_tb_logger: true
   wandb:
     project: ~

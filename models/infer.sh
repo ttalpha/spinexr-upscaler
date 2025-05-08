@@ -1,1 +1,1 @@
-python inference_realesrgan.py -n RealESRGAN_x4plus -i datasets/test_png_x4 -o results/ftx4_v3 -mp weights/g_x4_v3.pth
+python inference_realesrgan.py -n RealESRGAN_x4plus -i datasets/test_png_x4/a36e9e8a8f3ea341df7a7beb9af2b467.png -o results/ftx4_v3 -mp weights/g_x4_v3.pth
