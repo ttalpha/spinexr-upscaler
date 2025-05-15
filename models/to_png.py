@@ -9,6 +9,9 @@ from PIL import Image
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pydicom.pixel_data_handlers.util import apply_voi_lut
 
+random.seed(42)
+np.random.seed(42)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -25,7 +28,6 @@ def read_xray(path, voi_lut=True, fix_monochrome=True):
     if fix_monochrome and dicom.PhotometricInterpretation == "MONOCHROME1":
         data = np.invert(data)
 
-    # Normalize efficiently
     data = (data - data.min()) / (np.ptp(data) + 1e-7)  # `ptp()` is `max - min`
     return (data * 65535).astype(np.uint16)  # Convert to 16-bit
 
@@ -51,7 +53,7 @@ def process_directory_parallel(input_dir, output_dir, num_workers=8, limit=4000)
 
     # Shuffle and limit the number of files processed
     random.shuffle(dicom_files)
-    # dicom_files = dicom_files[:limit]
+    dicom_files = dicom_files[:limit]
 
     logger.info(f"Processing {len(dicom_files)} files in parallel with {num_workers} workers.")
 
@@ -66,8 +68,8 @@ def process_directory_parallel(input_dir, output_dir, num_workers=8, limit=4000)
     logger.info("Parallel conversion complete!")
 
 # Directories
-test_dicom_dir = "datasets/test_images"
+test_dicom_dir = "datasets/test"
 test_png_dir = "datasets/test_png"
 
 # Process test and test directories in parallel
-process_directory_parallel(test_dicom_dir, test_png_dir, num_workers=4)
+process_directory_parallel(test_dicom_dir, test_png_dir, num_workers=4, limit=10)

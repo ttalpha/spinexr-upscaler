@@ -1,23 +1,22 @@
 # Spinexr Upscaler API
 
-Spinexr Upscaler API là một dịch vụ RESTful API giúp upload, xử lý và tải xuống các file DICOM. API hỗ trợ upscale ảnh (2, 4) và bit depth (8, 16) thông qua script xử lý bằng Python.
+Spinexr Upscaler API là một dịch vụ RESTful API giúp upload, xử lý và tải xuống các file DICOM. API hỗ trợ upscale ảnh x4 16-bit PNG
 
 ## 1. Cài đặt và Chạy API
 
 ### Yêu cầu:
 - Go 1.18+
-- Python 3.x
-- Thư viện Python: `?`
-- Hệ điều hành: Linux / macOS / Windows
+- Python 3.12
+- Hệ điều hành: Linux
 
 ### Cách chạy API:
 1. **Clone repository**
 ```sh
-git clone https://github.com/your-repo/spinexr-upscaler-api.git
-cd spinexr-upscaler-api
+git clone https://github.com/ttalpha/spinexr-upscaler.git
 ```
 2. **Biên dịch ứng dụng**
 ```sh
+cd api/
 go build -o su-api
 ```
 3. **Chạy API với cổng 8080**
@@ -28,38 +27,37 @@ go build -o su-api
 1. **Clone Repository**
 ```sh
 git clone https://github.com/ttalpha/spinexr-upscaler.git
-cd spinexr-upscaler
 ```
 2. **Build Docker Image**
 ```sh
-cd api
-docker build -t spinexr-upscaler .
+cd ../
+docker build -t spinexr-upscaler:latest .
 ```
 3. **Chạy Docker**
 ```sh
-docker run -d -p 8080:8080 --gpus all -v $(pwd)/models:/app/models spinexr-upscaler
+cd ../
+docker compose up -d
 ```
 ---
 
 ## 2. Sử dụng API với `curl`
 
-### Upload file DICOM
-Gửi file DICOM với thông số **upscale** (chỉ nhận `2` hoặc `4`) và **bit** (chỉ nhận `8` hoặc `16`).
+### Upscale file DICOM
+Gửi các file DICOM với `userId`
 
 ```sh
-curl -X POST http://localhost:8080/upload \
+curl -X POST http://localhost:8080/upscale \
      -F "file=@scan1.dcm" \
      -F "file=@scan2.dcm" \
-     -F "upscale=4" \
-     -F "bit=16"
+     -F "userId=abc123"
 ```
 **Phản hồi mẫu:**
 ```json
 {
   "message": "Files uploaded and processed",
   "files": [
-    { "filename": "scan1.dcm", "output": "uploads/u_abc123/1743418533703/scan1_processed.dicom", "userId": "abc123" },
-    { "filename": "scan2.dcm", "output": "uploads/u_abc123/1743418533703/scan2_processed.dicom", "userId": "abc123" }
+    { "filename": "scan1.dcm", "output": "uploads/abc123/1743418533703/scan1_processed.dicom", "userId": "abc123" },
+    { "filename": "scan2.dcm", "output": "uploads/abc123/1743418533703/scan2_processed.dicom", "userId": "abc123" }
   ]
 }
 ```
@@ -79,8 +77,8 @@ Response:
 ```json
 {
   "images": [
-    { "filename": "scan1_processed.dicom", "path": "uploads/u_abc123/1743418533703/scan1_processed.dicom" },
-    { "filename": "scan2_processed.dicom", "path": "uploads/u_abc123/1743418533703/scan2_processed.dicom" }
+    { "filename": "scan1_processed.dicom", "path": "uploads/abc123/1743418533703/scan1_processed.dicom" },
+    { "filename": "scan2_processed.dicom", "path": "uploads/abc123/1743418533703/scan2_processed.dicom" }
   ]
 }
 ```

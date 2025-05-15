@@ -40,7 +40,7 @@ def process_directory_parallel(input_dir, output_dir, num_workers=8):
     input_files = {f.stem for f in input_dir.glob("*.dicom")}
     output_files = {f.stem for f in output_dir.glob("*.jpeg")}
 
-    dicom_files = [(input_dir / f"{f}.dicom", output_dir / f"{f}.jpeg") for f in (input_files - output_files)]
+    dicom_files = [(input_dir / f"{f}.dicom", output_dir / f"{f}.jpeg") for f in (input_files - output_files)][:30]
 
     logger.info(f"Processing {len(dicom_files)} files in parallel with {num_workers} workers.")
 
@@ -52,7 +52,8 @@ def process_directory_parallel(input_dir, output_dir, num_workers=8):
 
     logger.info("Parallel conversion complete!")
 
-test_dicom_dir = "datasets/test_images"
+# Modify the path
+test_dicom_dir = "datasets/test"
 test_jpeg_dir = "datasets/test_jpeg"
 
 process_directory_parallel(test_dicom_dir, test_jpeg_dir, num_workers=4)

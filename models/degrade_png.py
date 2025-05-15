@@ -7,6 +7,7 @@ import argparse
 
 random.seed(42)
 np.random.seed(42)
+
 # Argument parser
 parser = argparse.ArgumentParser(description='Degrade PNG images.')
 parser.add_argument('-s', '--scale', type=int, default=4, help='Downscale factor')
@@ -105,8 +106,7 @@ def degrade_image(filename):
                 img_resized = add_salt_and_pepper_noise(img_resized)
             else:
                 img_resized = add_speckle_noise(img_resized)
-
-        cv2.imwrite(output_path, img_resized, [cv2.IMWRITE_JPEG_QUALITY, random.randint(70, 90)])
+        cv2.imwrite(output_path, img_resized)
 
 input_files = os.listdir(input_dir)
 

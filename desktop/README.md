@@ -1,4 +1,4 @@
-# desktop
+# Desktop
 
 An Electron application with React and TypeScript
 
@@ -8,10 +8,18 @@ An Electron application with React and TypeScript
 
 ## Project Setup
 
+Follow the instruction on [API README.md](../api/README.md) to set up API for the frontend to connect.
+
 ### Install
 
 ```bash
 $ npm install
+```
+
+### Add env
+Create .env.local and add:
+```env
+VITE_API_URL=http://localhost
 ```
 
 ### Development

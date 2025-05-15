@@ -4,46 +4,52 @@ import os
 import cv2
 from glob import glob
 
-def process_dicom_with_jpg(test_jpg_folder, test_dicom_folder, output_folder):
+def process_dicom_with_png(test_png_folder, test_dicom_folder, output_folder):
     os.makedirs(output_folder, exist_ok=True)
 
-    jpg_files = glob(os.path.join(test_jpg_folder, "*.jpeg"))
+    png_files = glob(os.path.join(test_png_folder, "*.png"))
 
-    for jpg_path in jpg_files:
-        file_id = os.path.basename(jpg_path).replace(".jpeg", "")
+    for png_path in png_files:
+        file_id = os.path.basename(png_path).replace(".png", "")
         dicom_path = os.path.join(test_dicom_folder, f"{file_id}.dicom")
 
         if not os.path.exists(dicom_path):
             print(f"Skipping {file_id}: No corresponding DICOM found.")
             continue
 
-        ds = pydicom.dcmread(dicom_path, force=True)
-        ds.file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
+        dicom = pydicom.dcmread(dicom_path, force=True)
+        dicom.file_meta.TransferSyntaxUID = pydicom.uid.ExplicitVRLittleEndian
 
-        jpg_image = cv2.imread(jpg_path, cv2.IMREAD_GRAYSCALE)
+        png_image = cv2.imread(png_path, cv2.IMREAD_UNCHANGED).astype(np.uint16)
+        print(png_image.max())
 
-        jpg_image = (jpg_image / 255.0) * 65535
-        jpg_image = jpg_image.astype(np.uint16)
+        if 'PixelData' in dicom and hasattr(dicom, "NumberOfFrames") and dicom.NumberOfFrames > 1:
+            del dicom.PixelData
 
-        if 'PixelData' in ds and hasattr(ds, "NumberOfFrames") and ds.NumberOfFrames > 1:
-            del ds.PixelData
+        if dicom.PhotometricInterpretation == 'MONOCHROME1':
+          png_image = np.invert(png_image)
 
-        if ds.PhotometricInterpretation == 'MONOCHROME1':
-          jpg_image = np.invert(jpg_image)
+        dicom.PixelData = png_image.tobytes()
+        dicom.Rows, dicom.Columns = png_image.shape
+        dicom.BitsAllocated = 16
+        dicom.BitsStored = 16
+        dicom.WindowCenter = 32768
+        dicom.WindowWidth = 65536
+        dicom.RescaleIntercept = 0
+        dicom.RescaleSlope = 1
 
-        ds.PixelData = jpg_image.tobytes()
-        ds.Rows, ds.Columns = jpg_image.shape
-        ds.BitsAllocated = 16
-        ds.BitsStored = 16
-        ds.HighBit = 15
-        ds.PixelRepresentation = 0
+        dicom.HighBit = 15
+        dicom.SamplesPerPixel = 1
+        dicom.PhotometricInterpretation = "MONOCHROME2"
+        dicom.PixelRepresentation = 0  # unsigned int
 
         output_dicom_path = os.path.join(output_folder, f"{file_id}.dicom")
+        dicom.save_as(output_dicom_path)
         print(f"Modified DICOM saved: {output_dicom_path}")
 
 
-process_dicom_with_jpg(
-    test_jpg_folder="datasets/test_jpg_x4/",
-    test_dicom_folder="datasets/test_images/",
+process_dicom_with_png(
+    test_png_folder="datasets/test_png_x4/",
+    test_dicom_folder="datasets/test_dicom/",
     output_folder="datasets/output_dicom/"
 )
